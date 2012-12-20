@@ -1,24 +1,19 @@
 package SevenZip.Compression.RangeCoder;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
-public class Encoder {
-    static final int kTopMask = ~((1 << 24) - 1);
+public class Encoder extends RangeBase {
+    public static final int kNumBitPriceShiftBits = 6;
 
-    static final int kNumBitModelTotalBits = 11;
-    static final int kBitModelTotal = (1 << kNumBitModelTotalBits);
-    static final int kNumMoveBits = 5;
+    private OutputStream Stream;
+    private long Low;
+    private int Range;
+    private int _cacheSize;
+    private int _cache;
+    private long _position;
 
-    java.io.OutputStream Stream;
-
-    long Low;
-    int Range;
-    int _cacheSize;
-    int _cache;
-
-    long _position;
-
-    public void SetStream(java.io.OutputStream stream) {
+    public void SetStream(OutputStream stream) {
         Stream = stream;
     }
 
@@ -73,19 +68,8 @@ public class Encoder {
         }
     }
 
-
     public long GetProcessedSizeAdd() {
         return _cacheSize + _position + 4;
-    }
-
-
-    static final int kNumMoveReducingBits = 2;
-    public static final int kNumBitPriceShiftBits = 6;
-
-    public static void InitBitModels(short[] probs) {
-        for (int i = 0; i < probs.length; i++) {
-            probs[i] = (kBitModelTotal >>> 1);
-        }
     }
 
     public void Encode(short[] probs, int index, int symbol) throws IOException {
@@ -105,29 +89,4 @@ public class Encoder {
         }
     }
 
-    private static int[] ProbPrices = new int[kBitModelTotal >>> kNumMoveReducingBits];
-
-    static {
-        int kNumBits = (kNumBitModelTotalBits - kNumMoveReducingBits);
-        for (int i = kNumBits - 1; i >= 0; i--) {
-            int start = 1 << (kNumBits - i - 1);
-            int end = 1 << (kNumBits - i);
-            for (int j = start; j < end; j++) {
-                ProbPrices[j] = (i << kNumBitPriceShiftBits) +
-                        (((end - j) << kNumBitPriceShiftBits) >>> (kNumBits - i - 1));
-            }
-        }
-    }
-
-    static public int GetPrice(int Prob, int symbol) {
-        return ProbPrices[(((Prob - symbol) ^ ((-symbol))) & (kBitModelTotal - 1)) >>> kNumMoveReducingBits];
-    }
-
-    static public int GetPrice0(int Prob) {
-        return ProbPrices[Prob >>> kNumMoveReducingBits];
-    }
-
-    static public int GetPrice1(int Prob) {
-        return ProbPrices[(kBitModelTotal - Prob) >>> kNumMoveReducingBits];
-    }
 }

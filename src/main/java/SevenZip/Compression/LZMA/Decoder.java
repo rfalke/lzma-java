@@ -4,23 +4,38 @@ import SevenZip.Compression.LZ.OutWindow;
 import SevenZip.Compression.RangeCoder.BitTreeDecoder;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class Decoder {
+    public static int ReverseDecode(short[] Models, int startIndex,
+                                    SevenZip.Compression.RangeCoder.Decoder rangeDecoder, int NumBitLevels) throws IOException {
+        int m = 1;
+        int symbol = 0;
+        for (int bitIndex = 0; bitIndex < NumBitLevels; bitIndex++) {
+            int bit = rangeDecoder.DecodeBit(Models, startIndex + m);
+            m <<= 1;
+            m += bit;
+            symbol |= (bit << bitIndex);
+        }
+        return symbol;
+    }
+
     class LenDecoder {
-        short[] m_Choice = new short[2];
-        BitTreeDecoder[] m_LowCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
-        BitTreeDecoder[] m_MidCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
-        BitTreeDecoder m_HighCoder = new BitTreeDecoder(Base.kNumHighLenBits);
+        final short[] m_Choice = new short[2];
+        final BitTreeDecoder[] m_LowCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
+        final BitTreeDecoder[] m_MidCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
+        final BitTreeDecoder m_HighCoder = new BitTreeDecoder(Base.kNumHighLenBits);
         int m_NumPosStates = 0;
 
-        public void Create(int numPosStates) {
+        protected void Create(int numPosStates) {
             for (; m_NumPosStates < numPosStates; m_NumPosStates++) {
                 m_LowCoder[m_NumPosStates] = new BitTreeDecoder(Base.kNumLowLenBits);
                 m_MidCoder[m_NumPosStates] = new BitTreeDecoder(Base.kNumMidLenBits);
             }
         }
 
-        public void Init() {
+        protected void Init() {
             SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_Choice);
             for (int posState = 0; posState < m_NumPosStates; posState++) {
                 m_LowCoder[posState].Init();
@@ -29,7 +44,7 @@ public class Decoder {
             m_HighCoder.Init();
         }
 
-        public int Decode(SevenZip.Compression.RangeCoder.Decoder rangeDecoder, int posState) throws IOException {
+        protected int Decode(SevenZip.Compression.RangeCoder.Decoder rangeDecoder, int posState) throws IOException {
             if (rangeDecoder.DecodeBit(m_Choice, 0) == 0) {
                 return m_LowCoder[posState].Decode(rangeDecoder);
             }
@@ -45,13 +60,13 @@ public class Decoder {
 
     class LiteralDecoder {
         class Decoder2 {
-            short[] m_Decoders = new short[0x300];
+            final short[] m_Decoders = new short[0x300];
 
             public void Init() {
                 SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_Decoders);
             }
 
-            public byte DecodeNormal(SevenZip.Compression.RangeCoder.Decoder rangeDecoder) throws IOException {
+            protected byte DecodeNormal(SevenZip.Compression.RangeCoder.Decoder rangeDecoder) throws IOException {
                 int symbol = 1;
                 do {
                     symbol = (symbol << 1) | rangeDecoder.DecodeBit(m_Decoders, symbol);
@@ -60,7 +75,7 @@ public class Decoder {
                 return (byte) symbol;
             }
 
-            public byte DecodeWithMatchByte(SevenZip.Compression.RangeCoder.Decoder rangeDecoder, byte matchByte) throws IOException {
+            protected byte DecodeWithMatchByte(SevenZip.Compression.RangeCoder.Decoder rangeDecoder, byte matchByte) throws IOException {
                 int symbol = 1;
                 do {
                     int matchBit = (matchByte >> 7) & 1;
@@ -84,7 +99,7 @@ public class Decoder {
         int m_NumPosBits;
         int m_PosMask;
 
-        public void Create(int numPosBits, int numPrevBits) {
+        protected void Create(int numPosBits, int numPrevBits) {
             if (m_Coders != null && m_NumPrevBits == numPrevBits && m_NumPosBits == numPosBits) {
                 return;
             }
@@ -98,7 +113,7 @@ public class Decoder {
             }
         }
 
-        public void Init() {
+        protected void Init() {
             int numStates = 1 << (m_NumPrevBits + m_NumPosBits);
             for (int i = 0; i < numStates; i++) {
                 m_Coders[i].Init();
@@ -110,30 +125,30 @@ public class Decoder {
         }
     }
 
-    OutWindow m_OutWindow = new OutWindow();
-    SevenZip.Compression.RangeCoder.Decoder m_RangeDecoder = new SevenZip.Compression.RangeCoder.Decoder();
+    private final OutWindow m_OutWindow = new OutWindow();
+    private final SevenZip.Compression.RangeCoder.Decoder m_RangeDecoder = new SevenZip.Compression.RangeCoder.Decoder();
 
-    short[] m_IsMatchDecoders = new short[Base.kNumStates << Base.kNumPosStatesBitsMax];
-    short[] m_IsRepDecoders = new short[Base.kNumStates];
-    short[] m_IsRepG0Decoders = new short[Base.kNumStates];
-    short[] m_IsRepG1Decoders = new short[Base.kNumStates];
-    short[] m_IsRepG2Decoders = new short[Base.kNumStates];
-    short[] m_IsRep0LongDecoders = new short[Base.kNumStates << Base.kNumPosStatesBitsMax];
+    private final short[] m_IsMatchDecoders = new short[Base.kNumStates << Base.kNumPosStatesBitsMax];
+    private final short[] m_IsRepDecoders = new short[Base.kNumStates];
+    private final short[] m_IsRepG0Decoders = new short[Base.kNumStates];
+    private final short[] m_IsRepG1Decoders = new short[Base.kNumStates];
+    private final short[] m_IsRepG2Decoders = new short[Base.kNumStates];
+    private final short[] m_IsRep0LongDecoders = new short[Base.kNumStates << Base.kNumPosStatesBitsMax];
 
-    BitTreeDecoder[] m_PosSlotDecoder = new BitTreeDecoder[Base.kNumLenToPosStates];
-    short[] m_PosDecoders = new short[Base.kNumFullDistances - Base.kEndPosModelIndex];
+    private final BitTreeDecoder[] m_PosSlotDecoder = new BitTreeDecoder[Base.kNumLenToPosStates];
+    private final short[] m_PosDecoders = new short[Base.kNumFullDistances - Base.kEndPosModelIndex];
 
-    BitTreeDecoder m_PosAlignDecoder = new BitTreeDecoder(Base.kNumAlignBits);
+    private final BitTreeDecoder m_PosAlignDecoder = new BitTreeDecoder(Base.kNumAlignBits);
 
-    LenDecoder m_LenDecoder = new LenDecoder();
-    LenDecoder m_RepLenDecoder = new LenDecoder();
+    private final LenDecoder m_LenDecoder = new LenDecoder();
+    private final LenDecoder m_RepLenDecoder = new LenDecoder();
 
-    LiteralDecoder m_LiteralDecoder = new LiteralDecoder();
+    private final LiteralDecoder m_LiteralDecoder = new LiteralDecoder();
 
-    int m_DictionarySize = -1;
-    int m_DictionarySizeCheck = -1;
+    private int m_DictionarySize = -1;
+    private int m_DictionarySizeCheck = -1;
 
-    int m_PosStateMask;
+    private int m_PosStateMask;
 
     public Decoder() {
         for (int i = 0; i < Base.kNumLenToPosStates; i++) {
@@ -187,7 +202,7 @@ public class Decoder {
         m_RangeDecoder.Init();
     }
 
-    public boolean Code(java.io.InputStream inStream, java.io.OutputStream outStream,
+    public boolean Code(InputStream inStream, OutputStream outStream,
                         long outSize) throws IOException {
         m_RangeDecoder.SetStream(inStream);
         m_OutWindow.SetStream(outStream);
@@ -250,7 +265,7 @@ public class Decoder {
                         int numDirectBits = (posSlot >> 1) - 1;
                         rep0 = ((2 | (posSlot & 1)) << numDirectBits);
                         if (posSlot < Base.kEndPosModelIndex) {
-                            rep0 += BitTreeDecoder.ReverseDecode(m_PosDecoders,
+                            rep0 += ReverseDecode(m_PosDecoders,
                                     rep0 - posSlot - 1, m_RangeDecoder, numDirectBits);
                         } else {
                             rep0 += (m_RangeDecoder.DecodeDirectBits(

@@ -6,30 +6,30 @@ import java.io.IOException;
 
 
 public class BinTree extends InWindow {
-    int _cyclicBufferPos;
-    int _cyclicBufferSize = 0;
-    int _matchMaxLen;
+    private int _cyclicBufferPos;
+    private int _cyclicBufferSize = 0;
+    private int _matchMaxLen;
 
-    int[] _son;
-    int[] _hash;
+    private int[] _son;
+    private int[] _hash;
 
-    int _cutValue = 0xFF;
-    int _hashMask;
-    int _hashSizeSum = 0;
+    private int _cutValue = 0xFF;
+    private int _hashMask;
+    private int _hashSizeSum = 0;
 
-    boolean HASH_ARRAY = true;
+    private boolean HASH_ARRAY = true;
 
-    static final int kHash2Size = 1 << 10;
-    static final int kHash3Size = 1 << 16;
-    static final int kBT2HashSize = 1 << 16;
-    static final int kStartMaxLen = 1;
-    static final int kHash3Offset = kHash2Size;
-    static final int kEmptyHashValue = 0;
-    static final int kMaxValForNormalize = (1 << 30) - 1;
+    private static final int kHash2Size = 1 << 10;
+    private static final int kHash3Size = 1 << 16;
+    private static final int kBT2HashSize = 1 << 16;
+    private static final int kStartMaxLen = 1;
+    private static final int kHash3Offset = kHash2Size;
+    private static final int kEmptyHashValue = 0;
+    private static final int kMaxValForNormalize = (1 << 30) - 1;
 
-    int kNumHashDirectBytes = 0;
-    int kMinMatchCheck = 4;
-    int kFixHashSize = kHash2Size + kHash3Size;
+    private int kNumHashDirectBytes = 0;
+    private int kMinMatchCheck = 4;
+    private int kFixHashSize = kHash2Size + kHash3Size;
 
     public void SetType(int numHashBytes) {
         HASH_ARRAY = (numHashBytes > 2);

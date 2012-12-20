@@ -1,20 +1,14 @@
 package SevenZip.Compression.RangeCoder;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-public class Decoder {
-    static final int kTopMask = ~((1 << 24) - 1);
+public class Decoder extends RangeBase {
+    private int Range;
+    private int Code;
+    private InputStream Stream;
 
-    static final int kNumBitModelTotalBits = 11;
-    static final int kBitModelTotal = (1 << kNumBitModelTotalBits);
-    static final int kNumMoveBits = 5;
-
-    int Range;
-    int Code;
-
-    java.io.InputStream Stream;
-
-    public final void SetStream(java.io.InputStream stream) {
+    public final void SetStream(InputStream stream) {
         Stream = stream;
     }
 
@@ -66,12 +60,6 @@ public class Decoder {
                 Range <<= 8;
             }
             return 1;
-        }
-    }
-
-    public static void InitBitModels(short[] probs) {
-        for (int i = 0; i < probs.length; i++) {
-            probs[i] = (kBitModelTotal >>> 1);
         }
     }
 }

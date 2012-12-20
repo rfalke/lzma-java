@@ -1,5 +1,14 @@
 package SevenZip;
 
+import SevenZip.Compression.LZMA.Decoder;
+import SevenZip.Compression.LZMA.Encoder;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 public class LzmaAlone {
     static public class CommandLine {
         public static final int kEncode = 0;
@@ -61,7 +70,7 @@ public class LzmaAlone {
             return true;
         }
 
-        public boolean Parse(String[] args) {
+        protected boolean Parse(String[] args) {
             int pos = 0;
             boolean switchMode = true;
             for (String s : args) {
@@ -123,7 +132,7 @@ public class LzmaAlone {
     }
 
 
-    static void PrintHelp() {
+    private static void PrintHelp() {
         System.out.println(
                 "\nUsage:  LZMA <e|d> [<switches>...] inputFile outputFile\n" +
                         "  e: encode file\n" +
@@ -163,20 +172,20 @@ public class LzmaAlone {
             if (params.MatchFinder > 1) {
                 throw new Exception("Unsupported match finder");
             }
-            SevenZip.LzmaBench.LzmaBenchmark(params.NumBenchmarkPasses, dictionary);
+            LzmaBench.LzmaBenchmark(params.NumBenchmarkPasses, dictionary);
         } else if (params.Command == CommandLine.kEncode || params.Command == CommandLine.kDecode) {
-            java.io.File inFile = new java.io.File(params.InFile);
-            java.io.File outFile = new java.io.File(params.OutFile);
+            File inFile = new File(params.InFile);
+            File outFile = new File(params.OutFile);
 
-            java.io.BufferedInputStream inStream = new java.io.BufferedInputStream(new java.io.FileInputStream(inFile));
-            java.io.BufferedOutputStream outStream = new java.io.BufferedOutputStream(new java.io.FileOutputStream(outFile));
+            BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(inFile));
+            BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(outFile));
 
             boolean eos = false;
             if (params.Eos) {
                 eos = true;
             }
             if (params.Command == CommandLine.kEncode) {
-                SevenZip.Compression.LZMA.Encoder encoder = new SevenZip.Compression.LZMA.Encoder();
+                Encoder encoder = new Encoder();
                 if (!encoder.SetAlgorithm(params.Algorithm)) {
                     throw new Exception("Incorrect compression mode");
                 }
@@ -210,7 +219,7 @@ public class LzmaAlone {
                 if (inStream.read(properties, 0, propertiesSize) != propertiesSize) {
                     throw new Exception("input .lzma file is too short");
                 }
-                SevenZip.Compression.LZMA.Decoder decoder = new SevenZip.Compression.LZMA.Decoder();
+                Decoder decoder = new Decoder();
                 if (!decoder.SetDecoderProperties(properties)) {
                     throw new Exception("Incorrect stream properties");
                 }

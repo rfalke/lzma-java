@@ -3,13 +3,14 @@
 package SevenZip.Compression.LZ;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 public class OutWindow {
-    byte[] _buffer;
-    int _pos;
-    int _windowSize = 0;
-    int _streamPos;
-    java.io.OutputStream _stream;
+    private byte[] _buffer;
+    private int _pos;
+    private int _windowSize = 0;
+    private int _streamPos;
+    private OutputStream _stream;
 
     public void Create(int windowSize) {
         if (_buffer == null || _windowSize != windowSize) {
@@ -20,7 +21,7 @@ public class OutWindow {
         _streamPos = 0;
     }
 
-    public void SetStream(java.io.OutputStream stream) throws IOException {
+    public void SetStream(OutputStream stream) throws IOException {
         ReleaseStream();
         _stream = stream;
     }

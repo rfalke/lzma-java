@@ -3,8 +3,8 @@ package SevenZip.Compression.RangeCoder;
 import java.io.IOException;
 
 public class BitTreeEncoder {
-    short[] Models;
-    int NumBitLevels;
+    private final short[] Models;
+    private final int NumBitLevels;
 
     public BitTreeEncoder(int numBitLevels) {
         NumBitLevels = numBitLevels;
@@ -41,7 +41,7 @@ public class BitTreeEncoder {
         for (int bitIndex = NumBitLevels; bitIndex != 0; ) {
             bitIndex--;
             int bit = (symbol >>> bitIndex) & 1;
-            price += Encoder.GetPrice(Models[m], bit);
+            price += ProbPrices.GetPrice(Models[m], bit);
             m = (m << 1) + bit;
         }
         return price;
@@ -53,33 +53,10 @@ public class BitTreeEncoder {
         for (int i = NumBitLevels; i != 0; i--) {
             int bit = symbol & 1;
             symbol >>>= 1;
-            price += Encoder.GetPrice(Models[m], bit);
+            price += ProbPrices.GetPrice(Models[m], bit);
             m = (m << 1) | bit;
         }
         return price;
     }
 
-    public static int ReverseGetPrice(short[] Models, int startIndex,
-                                      int NumBitLevels, int symbol) {
-        int price = 0;
-        int m = 1;
-        for (int i = NumBitLevels; i != 0; i--) {
-            int bit = symbol & 1;
-            symbol >>>= 1;
-            price += Encoder.GetPrice(Models[startIndex + m], bit);
-            m = (m << 1) | bit;
-        }
-        return price;
-    }
-
-    public static void ReverseEncode(short[] Models, int startIndex,
-                                     Encoder rangeEncoder, int NumBitLevels, int symbol) throws IOException {
-        int m = 1;
-        for (int i = 0; i < NumBitLevels; i++) {
-            int bit = symbol & 1;
-            rangeEncoder.Encode(Models, startIndex + m, bit);
-            m = (m << 1) | bit;
-            symbol >>= 1;
-        }
-    }
 }

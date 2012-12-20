@@ -1,11 +1,16 @@
 package SevenZip;
 
+import SevenZip.Compression.LZMA.Decoder;
+import SevenZip.Compression.LZMA.Encoder;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class LzmaBench {
-    static final int kAdditionalSize = (1 << 21);
-    static final int kCompressedAdditionalSize = (1 << 10);
+    private static final int kAdditionalSize = (1 << 21);
+    private static final int kCompressedAdditionalSize = (1 << 10);
 
     static class CRandomGenerator {
         int A1;
@@ -28,7 +33,7 @@ public class LzmaBench {
     }
 
     static class CBitRandomGenerator {
-        CRandomGenerator RG = new CRandomGenerator();
+        final CRandomGenerator RG = new CRandomGenerator();
         int Value;
         int NumBits;
 
@@ -56,17 +61,17 @@ public class LzmaBench {
     }
 
     static class CBenchRandomGenerator {
-        CBitRandomGenerator RG = new CBitRandomGenerator();
+        final CBitRandomGenerator RG = new CBitRandomGenerator();
         int Pos;
         int Rep0;
 
         public int BufferSize;
         public byte[] Buffer = null;
 
-        public CBenchRandomGenerator() {
+        private CBenchRandomGenerator() {
         }
 
-        public void Set(int bufferSize) {
+        protected void Set(int bufferSize) {
             Buffer = new byte[bufferSize];
             Pos = 0;
             BufferSize = bufferSize;
@@ -96,7 +101,7 @@ public class LzmaBench {
             return RG.GetRnd(2 + (int) RG.GetRnd(2));
         }
 
-        public void Generate() {
+        protected void Generate() {
             RG.Init();
             Rep0 = 1;
             while (Pos < BufferSize) {
@@ -122,14 +127,14 @@ public class LzmaBench {
         }
     }
 
-    static class CrcOutStream extends java.io.OutputStream {
-        public CRC CRC = new CRC();
+    static class CrcOutStream extends OutputStream {
+        public final CRC CRC = new CRC();
 
-        public void Init() {
+        protected void Init() {
             CRC.Init();
         }
 
-        public int GetDigest() {
+        protected int GetDigest() {
             return CRC.GetDigest();
         }
 
@@ -146,17 +151,17 @@ public class LzmaBench {
         }
     }
 
-    static class MyOutputStream extends java.io.OutputStream {
-        byte[] _buffer;
-        int _size;
+    static class MyOutputStream extends OutputStream {
+        final byte[] _buffer;
+        final int _size;
         int _pos;
 
-        public MyOutputStream(byte[] buffer) {
+        private MyOutputStream(byte[] buffer) {
             _buffer = buffer;
             _size = _buffer.length;
         }
 
-        public void reset() {
+        protected void reset() {
             _pos = 0;
         }
 
@@ -167,17 +172,17 @@ public class LzmaBench {
             _buffer[_pos++] = (byte) b;
         }
 
-        public int size() {
+        protected int size() {
             return _pos;
         }
     }
 
-    static class MyInputStream extends java.io.InputStream {
-        byte[] _buffer;
-        int _size;
+    static class MyInputStream extends InputStream {
+        final byte[] _buffer;
+        final int _size;
         int _pos;
 
-        public MyInputStream(byte[] buffer, int size) {
+        private MyInputStream(byte[] buffer, int size) {
             _buffer = buffer;
             _size = size;
         }
@@ -199,7 +204,7 @@ public class LzmaBench {
         public long InSize;
         public long Time;
 
-        public void Init() {
+        protected void Init() {
             InSize = 0;
         }
 
@@ -211,9 +216,9 @@ public class LzmaBench {
         }
     }
 
-    static final int kSubBits = 8;
+    private static final int kSubBits = 8;
 
-    static int GetLogSize(int size) {
+    private static int GetLogSize(int size) {
         for (int i = kSubBits; i < 32; i++) {
             for (int j = 0; j < (1 << kSubBits); j++) {
                 if (size <= ((1) << i) + (j << (i - kSubBits))) {
@@ -224,7 +229,7 @@ public class LzmaBench {
         return (32 << kSubBits);
     }
 
-    static long MyMultDiv64(long value, long elapsedTime) {
+    private static long MyMultDiv64(long value, long elapsedTime) {
         long freq = 1000; // ms
         long elTime = elapsedTime;
         while (freq > 1000000) {
@@ -237,14 +242,14 @@ public class LzmaBench {
         return value * freq / elTime;
     }
 
-    static long GetCompressRating(int dictionarySize, long elapsedTime, long size) {
+    private static long GetCompressRating(int dictionarySize, long elapsedTime, long size) {
         long t = GetLogSize(dictionarySize) - (18 << kSubBits);
         long numCommandsForOne = 1060 + ((t * t * 10) >> (2 * kSubBits));
         long numCommands = (long) (size) * numCommandsForOne;
         return MyMultDiv64(numCommands, elapsedTime);
     }
 
-    static long GetDecompressRating(long elapsedTime, long outSize, long inSize) {
+    private static long GetDecompressRating(long elapsedTime, long outSize, long inSize) {
         long numCommands = inSize * 220 + outSize * 20;
         return MyMultDiv64(numCommands, elapsedTime);
     }
@@ -258,7 +263,7 @@ public class LzmaBench {
                 GetDecompressRating(elapsedTimeDe, inSizeDe, outSizeDe)) / 2;
     }
 
-    static void PrintValue(long v) {
+    private static void PrintValue(long v) {
         String s = "";
         s += v;
         for (int i = 0; i + s.length() < 6; i++) {
@@ -267,12 +272,12 @@ public class LzmaBench {
         System.out.print(s);
     }
 
-    static void PrintRating(long rating) {
+    private static void PrintRating(long rating) {
         PrintValue(rating / 1000000);
         System.out.print(" MIPS");
     }
 
-    static void PrintResults(
+    private static void PrintResults(
             int dictionarySize,
             long elapsedTime,
             long size,
@@ -299,8 +304,8 @@ public class LzmaBench {
         }
         System.out.print("\n       Compressing                Decompressing\n\n");
 
-        SevenZip.Compression.LZMA.Encoder encoder = new SevenZip.Compression.LZMA.Encoder();
-        SevenZip.Compression.LZMA.Decoder decoder = new SevenZip.Compression.LZMA.Decoder();
+        Encoder encoder = new Encoder();
+        Decoder decoder = new Decoder();
 
         if (!encoder.SetDictionarySize(dictionarySize)) {
             throw new Exception("Incorrect dictionary size");
