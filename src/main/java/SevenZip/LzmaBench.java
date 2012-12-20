@@ -27,8 +27,6 @@ public class LzmaBench {
         }
     }
 
-    ;
-
     static class CBitRandomGenerator {
         CRandomGenerator RG = new CRandomGenerator();
         int Value;
@@ -57,8 +55,6 @@ public class LzmaBench {
         }
     }
 
-    ;
-
     static class CBenchRandomGenerator {
         CBitRandomGenerator RG = new CBitRandomGenerator();
         int Pos;
@@ -86,8 +82,9 @@ public class LzmaBench {
         }
 
         int GetOffset() {
-            if (GetRndBit() == 0)
+            if (GetRndBit() == 0) {
                 return GetLogRandBits(4);
+            }
             return (GetLogRandBits(4) << 10) | RG.GetRnd(10);
         }
 
@@ -103,27 +100,27 @@ public class LzmaBench {
             RG.Init();
             Rep0 = 1;
             while (Pos < BufferSize) {
-                if (GetRndBit() == 0 || Pos < 1)
+                if (GetRndBit() == 0 || Pos < 1) {
                     Buffer[Pos++] = (byte) (RG.GetRnd(8));
-                else {
+                } else {
                     int len;
-                    if (RG.GetRnd(3) == 0)
+                    if (RG.GetRnd(3) == 0) {
                         len = 1 + GetLen1();
-                    else {
-                        do
+                    } else {
+                        do {
                             Rep0 = GetOffset();
+                        }
                         while (Rep0 >= Pos);
                         Rep0++;
                         len = 2 + GetLen2();
                     }
-                    for (int i = 0; i < len && Pos < BufferSize; i++, Pos++)
+                    for (int i = 0; i < len && Pos < BufferSize; i++, Pos++) {
                         Buffer[Pos] = Buffer[Pos - Rep0];
+                    }
                 }
             }
         }
     }
-
-    ;
 
     static class CrcOutStream extends java.io.OutputStream {
         public CRC CRC = new CRC();
@@ -149,8 +146,6 @@ public class LzmaBench {
         }
     }
 
-    ;
-
     static class MyOutputStream extends java.io.OutputStream {
         byte[] _buffer;
         int _size;
@@ -166,8 +161,9 @@ public class LzmaBench {
         }
 
         public void write(int b) throws IOException {
-            if (_pos >= _size)
+            if (_pos >= _size) {
                 throw new IOException("Error");
+            }
             _buffer[_pos++] = (byte) b;
         }
 
@@ -175,8 +171,6 @@ public class LzmaBench {
             return _pos;
         }
     }
-
-    ;
 
     static class MyInputStream extends java.io.InputStream {
         byte[] _buffer;
@@ -193,13 +187,12 @@ public class LzmaBench {
         }
 
         public int read() {
-            if (_pos >= _size)
+            if (_pos >= _size) {
                 return -1;
+            }
             return _buffer[_pos++] & 0xFF;
         }
     }
-
-    ;
 
     static class CProgressInfo implements ICodeProgress {
         public long ApprovedStart;
@@ -221,10 +214,13 @@ public class LzmaBench {
     static final int kSubBits = 8;
 
     static int GetLogSize(int size) {
-        for (int i = kSubBits; i < 32; i++)
-            for (int j = 0; j < (1 << kSubBits); j++)
-                if (size <= ((1) << i) + (j << (i - kSubBits)))
+        for (int i = kSubBits; i < 32; i++) {
+            for (int j = 0; j < (1 << kSubBits); j++) {
+                if (size <= ((1) << i) + (j << (i - kSubBits))) {
                     return (i << kSubBits) + j;
+                }
+            }
+        }
         return (32 << kSubBits);
     }
 
@@ -235,8 +231,9 @@ public class LzmaBench {
             freq >>>= 1;
             elTime >>>= 1;
         }
-        if (elTime == 0)
+        if (elTime == 0) {
             elTime = 1;
+        }
         return value * freq / elTime;
     }
 
@@ -264,8 +261,9 @@ public class LzmaBench {
     static void PrintValue(long v) {
         String s = "";
         s += v;
-        for (int i = 0; i + s.length() < 6; i++)
+        for (int i = 0; i + s.length() < 6; i++) {
             System.out.print(" ");
+        }
         System.out.print(s);
     }
 
@@ -283,16 +281,18 @@ public class LzmaBench {
         PrintValue(speed / 1024);
         System.out.print(" KB/s  ");
         long rating;
-        if (decompressMode)
+        if (decompressMode) {
             rating = GetDecompressRating(elapsedTime, size, secondSize);
-        else
+        } else {
             rating = GetCompressRating(dictionarySize, elapsedTime, size);
+        }
         PrintRating(rating);
     }
 
     static public int LzmaBenchmark(int numIterations, int dictionarySize) throws Exception {
-        if (numIterations <= 0)
+        if (numIterations <= 0) {
             return 0;
+        }
         if (dictionarySize < (1 << 18)) {
             System.out.println("\nError: dictionary size for benchmark must be >= 18 (256 KB)");
             return 1;
@@ -302,8 +302,9 @@ public class LzmaBench {
         SevenZip.Compression.LZMA.Encoder encoder = new SevenZip.Compression.LZMA.Encoder();
         SevenZip.Compression.LZMA.Decoder decoder = new SevenZip.Compression.LZMA.Decoder();
 
-        if (!encoder.SetDictionarySize(dictionarySize))
+        if (!encoder.SetDictionarySize(dictionarySize)) {
             throw new Exception("Incorrect dictionary size");
+        }
 
         int kBufferSize = dictionarySize + kAdditionalSize;
         int kCompressedBufferSize = (kBufferSize / 2) + kCompressedAdditionalSize;
@@ -346,11 +347,13 @@ public class LzmaBench {
             if (i == 0) {
                 compressedSize = compressedStream.size();
                 inputCompressedStream = new MyInputStream(compressedBuffer, compressedSize);
-            } else if (compressedSize != compressedStream.size())
+            } else if (compressedSize != compressedStream.size()) {
                 throw (new Exception("Encoding error"));
+            }
 
-            if (progressInfo.InSize == 0)
+            if (progressInfo.InSize == 0) {
                 throw (new Exception("Internal ERROR 1282"));
+            }
 
             long decodeTime = 0;
             for (int j = 0; j < 2; j++) {
@@ -359,12 +362,13 @@ public class LzmaBench {
 
                 long outSize = kBufferSize;
                 long startTime = System.currentTimeMillis();
-                if (!decoder.Code(inputCompressedStream, crcOutStream, outSize))
+                if (!decoder.Code(inputCompressedStream, crcOutStream, outSize)) {
                     throw (new Exception("Decoding Error"));
-                ;
+                }
                 decodeTime = System.currentTimeMillis() - startTime;
-                if (crcOutStream.GetDigest() != crc.GetDigest())
+                if (crcOutStream.GetDigest() != crc.GetDigest()) {
                     throw (new Exception("CRC Error"));
+                }
             }
             long benchSize = kBufferSize - (long) progressInfo.InSize;
             PrintResults(dictionarySize, encodeTime, benchSize, false, 0);

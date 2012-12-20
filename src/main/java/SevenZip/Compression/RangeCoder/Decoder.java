@@ -25,8 +25,9 @@ public class Decoder {
     public final void Init() throws IOException {
         Code = 0;
         Range = -1;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++) {
             Code = (Code << 8) | Stream.read();
+        }
     }
 
     public final int DecodeDirectBits(int numTotalBits) throws IOException {
@@ -69,7 +70,8 @@ public class Decoder {
     }
 
     public static void InitBitModels(short[] probs) {
-        for (int i = 0; i < probs.length; i++)
+        for (int i = 0; i < probs.length; i++) {
             probs[i] = (kBitModelTotal >>> 1);
+        }
     }
 }

@@ -35,8 +35,9 @@ public class Encoder {
     }
 
     public void FlushData() throws IOException {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++) {
             ShiftLow();
+        }
     }
 
     public void FlushStream() throws IOException {
@@ -62,8 +63,9 @@ public class Encoder {
     public void EncodeDirectBits(int v, int numTotalBits) throws IOException {
         for (int i = numTotalBits - 1; i >= 0; i--) {
             Range >>>= 1;
-            if (((v >>> i) & 1) == 1)
+            if (((v >>> i) & 1) == 1) {
                 Low += Range;
+            }
             if ((Range & Encoder.kTopMask) == 0) {
                 Range <<= 8;
                 ShiftLow();
@@ -81,8 +83,9 @@ public class Encoder {
     public static final int kNumBitPriceShiftBits = 6;
 
     public static void InitBitModels(short[] probs) {
-        for (int i = 0; i < probs.length; i++)
+        for (int i = 0; i < probs.length; i++) {
             probs[i] = (kBitModelTotal >>> 1);
+        }
     }
 
     public void Encode(short[] probs, int index, int symbol) throws IOException {
@@ -109,9 +112,10 @@ public class Encoder {
         for (int i = kNumBits - 1; i >= 0; i--) {
             int start = 1 << (kNumBits - i - 1);
             int end = 1 << (kNumBits - i);
-            for (int j = start; j < end; j++)
+            for (int j = start; j < end; j++) {
                 ProbPrices[j] = (i << kNumBitPriceShiftBits) +
                         (((end - j) << kNumBitPriceShiftBits) >>> (kNumBits - i - 1));
+            }
         }
     }
 

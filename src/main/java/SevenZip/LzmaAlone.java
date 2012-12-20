@@ -34,38 +34,40 @@ public class LzmaAlone {
             } else if (s.startsWith("fb")) {
                 Fb = Integer.parseInt(s.substring(2));
                 FbIsDefined = true;
-            } else if (s.startsWith("a"))
+            } else if (s.startsWith("a")) {
                 Algorithm = Integer.parseInt(s.substring(1));
-            else if (s.startsWith("lc"))
+            } else if (s.startsWith("lc")) {
                 Lc = Integer.parseInt(s.substring(2));
-            else if (s.startsWith("lp"))
+            } else if (s.startsWith("lp")) {
                 Lp = Integer.parseInt(s.substring(2));
-            else if (s.startsWith("pb"))
+            } else if (s.startsWith("pb")) {
                 Pb = Integer.parseInt(s.substring(2));
-            else if (s.startsWith("eos"))
+            } else if (s.startsWith("eos")) {
                 Eos = true;
-            else if (s.startsWith("mf")) {
+            } else if (s.startsWith("mf")) {
                 String mfs = s.substring(2);
-                if (mfs.equals("bt2"))
+                if (mfs.equals("bt2")) {
                     MatchFinder = 0;
-                else if (mfs.equals("bt4"))
+                } else if (mfs.equals("bt4")) {
                     MatchFinder = 1;
-                else if (mfs.equals("bt4b"))
+                } else if (mfs.equals("bt4b")) {
                     MatchFinder = 2;
-                else
+                } else {
                     return false;
-            } else
+                }
+            } else {
                 return false;
+            }
             return true;
         }
 
         public boolean Parse(String[] args) throws Exception {
             int pos = 0;
             boolean switchMode = true;
-            for (int i = 0; i < args.length; i++) {
-                String s = args[i];
-                if (s.length() == 0)
+            for (String s : args) {
+                if (s.length() == 0) {
                     return false;
+                }
                 if (switchMode) {
                     if (s.compareTo("--") == 0) {
                         switchMode = false;
@@ -73,11 +75,13 @@ public class LzmaAlone {
                     }
                     if (s.charAt(0) == '-') {
                         String sw = s.substring(1).toLowerCase();
-                        if (sw.length() == 0)
+                        if (sw.length() == 0) {
                             return false;
+                        }
                         try {
-                            if (!ParseSwitch(sw))
+                            if (!ParseSwitch(sw)) {
                                 return false;
+                            }
                         } catch (NumberFormatException e) {
                             return false;
                         }
@@ -85,31 +89,34 @@ public class LzmaAlone {
                     }
                 }
                 if (pos == 0) {
-                    if (s.equalsIgnoreCase("e"))
+                    if (s.equalsIgnoreCase("e")) {
                         Command = kEncode;
-                    else if (s.equalsIgnoreCase("d"))
+                    } else if (s.equalsIgnoreCase("d")) {
                         Command = kDecode;
-                    else if (s.equalsIgnoreCase("b"))
+                    } else if (s.equalsIgnoreCase("b")) {
                         Command = kBenchmak;
-                    else
+                    } else {
                         return false;
+                    }
                 } else if (pos == 1) {
                     if (Command == kBenchmak) {
                         try {
                             NumBenchmarkPasses = Integer.parseInt(s);
-                            if (NumBenchmarkPasses < 1)
+                            if (NumBenchmarkPasses < 1) {
                                 return false;
+                            }
                         } catch (NumberFormatException e) {
                             return false;
                         }
-                    } else
+                    } else {
                         InFile = s;
-                } else if (pos == 2)
+                    }
+                } else if (pos == 2) {
                     OutFile = s;
-                else
+                } else {
                     return false;
+                }
                 pos++;
-                continue;
             }
             return true;
         }
@@ -150,10 +157,12 @@ public class LzmaAlone {
 
         if (params.Command == CommandLine.kBenchmak) {
             int dictionary = (1 << 21);
-            if (params.DictionarySizeIsDefined)
+            if (params.DictionarySizeIsDefined) {
                 dictionary = params.DictionarySize;
-            if (params.MatchFinder > 1)
+            }
+            if (params.MatchFinder > 1) {
                 throw new Exception("Unsupported match finder");
+            }
             SevenZip.LzmaBench.LzmaBenchmark(params.NumBenchmarkPasses, dictionary);
         } else if (params.Command == CommandLine.kEncode || params.Command == CommandLine.kDecode) {
             java.io.File inFile = new java.io.File(params.InFile);
@@ -163,53 +172,65 @@ public class LzmaAlone {
             java.io.BufferedOutputStream outStream = new java.io.BufferedOutputStream(new java.io.FileOutputStream(outFile));
 
             boolean eos = false;
-            if (params.Eos)
+            if (params.Eos) {
                 eos = true;
+            }
             if (params.Command == CommandLine.kEncode) {
                 SevenZip.Compression.LZMA.Encoder encoder = new SevenZip.Compression.LZMA.Encoder();
-                if (!encoder.SetAlgorithm(params.Algorithm))
+                if (!encoder.SetAlgorithm(params.Algorithm)) {
                     throw new Exception("Incorrect compression mode");
-                if (!encoder.SetDictionarySize(params.DictionarySize))
+                }
+                if (!encoder.SetDictionarySize(params.DictionarySize)) {
                     throw new Exception("Incorrect dictionary size");
-                if (!encoder.SetNumFastBytes(params.Fb))
+                }
+                if (!encoder.SetNumFastBytes(params.Fb)) {
                     throw new Exception("Incorrect -fb value");
-                if (!encoder.SetMatchFinder(params.MatchFinder))
+                }
+                if (!encoder.SetMatchFinder(params.MatchFinder)) {
                     throw new Exception("Incorrect -mf value");
-                if (!encoder.SetLcLpPb(params.Lc, params.Lp, params.Pb))
+                }
+                if (!encoder.SetLcLpPb(params.Lc, params.Lp, params.Pb)) {
                     throw new Exception("Incorrect -lc or -lp or -pb value");
+                }
                 encoder.SetEndMarkerMode(eos);
                 encoder.WriteCoderProperties(outStream);
                 long fileSize;
-                if (eos)
+                if (eos) {
                     fileSize = -1;
-                else
+                } else {
                     fileSize = inFile.length();
-                for (int i = 0; i < 8; i++)
+                }
+                for (int i = 0; i < 8; i++) {
                     outStream.write((int) (fileSize >>> (8 * i)) & 0xFF);
+                }
                 encoder.Code(inStream, outStream, -1, -1, null);
             } else {
                 int propertiesSize = 5;
                 byte[] properties = new byte[propertiesSize];
-                if (inStream.read(properties, 0, propertiesSize) != propertiesSize)
+                if (inStream.read(properties, 0, propertiesSize) != propertiesSize) {
                     throw new Exception("input .lzma file is too short");
+                }
                 SevenZip.Compression.LZMA.Decoder decoder = new SevenZip.Compression.LZMA.Decoder();
-                if (!decoder.SetDecoderProperties(properties))
+                if (!decoder.SetDecoderProperties(properties)) {
                     throw new Exception("Incorrect stream properties");
+                }
                 long outSize = 0;
                 for (int i = 0; i < 8; i++) {
                     int v = inStream.read();
-                    if (v < 0)
+                    if (v < 0) {
                         throw new Exception("Can't read stream size");
+                    }
                     outSize |= ((long) v) << (8 * i);
                 }
-                if (!decoder.Code(inStream, outStream, outSize))
+                if (!decoder.Code(inStream, outStream, outSize)) {
                     throw new Exception("Error in data stream");
+                }
             }
             outStream.flush();
             outStream.close();
             inStream.close();
-        } else
+        } else {
             throw new Exception("Incorrect command");
-        return;
+        }
     }
 }
