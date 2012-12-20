@@ -28,7 +28,7 @@ public class InWindow {
             offset--;
         }
 
-        int numBytes = _bufferOffset + _streamPos - offset;
+        final int numBytes = _bufferOffset + _streamPos - offset;
 
         // check negative offset ????
         for (int i = 0; i < numBytes; i++) {
@@ -42,14 +42,14 @@ public class InWindow {
             return;
         }
         while (true) {
-            int size = (0 - _bufferOffset) + _blockSize - _streamPos;
+            final int size = (0 - _bufferOffset) + _blockSize - _streamPos;
             if (size == 0) {
                 return;
             }
-            int numReadBytes = _stream.read(_bufferBase, _bufferOffset + _streamPos, size);
+            final int numReadBytes = _stream.read(_bufferBase, _bufferOffset + _streamPos, size);
             if (numReadBytes == -1) {
                 _posLimit = _streamPos;
-                int pointerToPostion = _bufferOffset + _posLimit;
+                final int pointerToPostion = _bufferOffset + _posLimit;
                 if (pointerToPostion > _pointerToLastSafePosition) {
                     _posLimit = _pointerToLastSafePosition - _bufferOffset;
                 }
@@ -71,7 +71,7 @@ public class InWindow {
     protected void Create(int keepSizeBefore, int keepSizeAfter, int keepSizeReserv) {
         _keepSizeBefore = keepSizeBefore;
         _keepSizeAfter = keepSizeAfter;
-        int blockSize = keepSizeBefore + keepSizeAfter + keepSizeReserv;
+        final int blockSize = keepSizeBefore + keepSizeAfter + keepSizeReserv;
         if (_bufferBase == null || _blockSize != blockSize) {
             Free();
             _blockSize = blockSize;
@@ -99,7 +99,7 @@ public class InWindow {
     protected void MovePos() throws IOException {
         _pos++;
         if (_pos > _posLimit) {
-            int pointerToPostion = _bufferOffset + _pos;
+            final int pointerToPostion = _bufferOffset + _pos;
             if (pointerToPostion > _pointerToLastSafePosition) {
                 MoveBlock();
             }
@@ -120,7 +120,7 @@ public class InWindow {
         }
         distance++;
         // Byte *pby = _buffer + (size_t)_pos + index;
-        int pby = _bufferOffset + _pos + index;
+        final int pby = _bufferOffset + _pos + index;
 
         int i;
         for (i = 0; i < limit && _bufferBase[pby + i] == _bufferBase[pby + i - distance]; i++) {

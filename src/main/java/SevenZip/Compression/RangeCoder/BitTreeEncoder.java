@@ -19,7 +19,7 @@ public class BitTreeEncoder {
         int m = 1;
         for (int bitIndex = NumBitLevels; bitIndex != 0; ) {
             bitIndex--;
-            int bit = (symbol >>> bitIndex) & 1;
+            final int bit = (symbol >>> bitIndex) & 1;
             rangeEncoder.Encode(Models, m, bit);
             m = (m << 1) | bit;
         }
@@ -28,7 +28,7 @@ public class BitTreeEncoder {
     public void ReverseEncode(Encoder rangeEncoder, int symbol) throws IOException {
         int m = 1;
         for (int i = 0; i < NumBitLevels; i++) {
-            int bit = symbol & 1;
+            final int bit = symbol & 1;
             rangeEncoder.Encode(Models, m, bit);
             m = (m << 1) | bit;
             symbol >>= 1;
@@ -40,7 +40,7 @@ public class BitTreeEncoder {
         int m = 1;
         for (int bitIndex = NumBitLevels; bitIndex != 0; ) {
             bitIndex--;
-            int bit = (symbol >>> bitIndex) & 1;
+            final int bit = (symbol >>> bitIndex) & 1;
             price += ProbPrices.GetPrice(Models[m], bit);
             m = (m << 1) + bit;
         }
@@ -51,7 +51,7 @@ public class BitTreeEncoder {
         int price = 0;
         int m = 1;
         for (int i = NumBitLevels; i != 0; i--) {
-            int bit = symbol & 1;
+            final int bit = symbol & 1;
             symbol >>>= 1;
             price += ProbPrices.GetPrice(Models[m], bit);
             m = (m << 1) | bit;

@@ -39,7 +39,7 @@ public class OutWindow {
     }
 
     public void Flush() throws IOException {
-        int size = _pos - _streamPos;
+        final int size = _pos - _streamPos;
         if (size == 0) {
             return;
         }

@@ -8,12 +8,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class Decoder {
-    public static int ReverseDecode(short[] Models, int startIndex,
-                                    SevenZip.Compression.RangeCoder.Decoder rangeDecoder, int NumBitLevels) throws IOException {
+    private static int ReverseDecode(short[] Models, int startIndex,
+                                     SevenZip.Compression.RangeCoder.Decoder rangeDecoder, int NumBitLevels) throws IOException {
         int m = 1;
         int symbol = 0;
         for (int bitIndex = 0; bitIndex < NumBitLevels; bitIndex++) {
-            int bit = rangeDecoder.DecodeBit(Models, startIndex + m);
+            final int bit = rangeDecoder.DecodeBit(Models, startIndex + m);
             m <<= 1;
             m += bit;
             symbol |= (bit << bitIndex);
@@ -78,9 +78,9 @@ public class Decoder {
             protected byte DecodeWithMatchByte(SevenZip.Compression.RangeCoder.Decoder rangeDecoder, byte matchByte) throws IOException {
                 int symbol = 1;
                 do {
-                    int matchBit = (matchByte >> 7) & 1;
+                    final int matchBit = (matchByte >> 7) & 1;
                     matchByte <<= 1;
-                    int bit = rangeDecoder.DecodeBit(m_Decoders, ((1 + matchBit) << 8) + symbol);
+                    final int bit = rangeDecoder.DecodeBit(m_Decoders, ((1 + matchBit) << 8) + symbol);
                     symbol = (symbol << 1) | bit;
                     if (matchBit != bit) {
                         while (symbol < 0x100) {
@@ -106,7 +106,7 @@ public class Decoder {
             m_NumPosBits = numPosBits;
             m_PosMask = (1 << numPosBits) - 1;
             m_NumPrevBits = numPrevBits;
-            int numStates = 1 << (m_NumPrevBits + m_NumPosBits);
+            final int numStates = 1 << (m_NumPrevBits + m_NumPosBits);
             m_Coders = new Decoder2[numStates];
             for (int i = 0; i < numStates; i++) {
                 m_Coders[i] = new Decoder2();
@@ -114,7 +114,7 @@ public class Decoder {
         }
 
         protected void Init() {
-            int numStates = 1 << (m_NumPrevBits + m_NumPosBits);
+            final int numStates = 1 << (m_NumPrevBits + m_NumPosBits);
             for (int i = 0; i < numStates; i++) {
                 m_Coders[i].Init();
             }
@@ -173,7 +173,7 @@ public class Decoder {
             return false;
         }
         m_LiteralDecoder.Create(lp, lc);
-        int numPosStates = 1 << pb;
+        final int numPosStates = 1 << pb;
         m_LenDecoder.Create(numPosStates);
         m_RepLenDecoder.Create(numPosStates);
         m_PosStateMask = numPosStates - 1;
@@ -208,22 +208,22 @@ public class Decoder {
         m_OutWindow.SetStream(outStream);
         Init();
 
-        int state = Base.StateInit();
+        int state = Base.getInitialState();
         int rep0 = 0, rep1 = 0, rep2 = 0, rep3 = 0;
 
         long nowPos64 = 0;
         byte prevByte = 0;
         while (outSize < 0 || nowPos64 < outSize) {
-            int posState = (int) nowPos64 & m_PosStateMask;
+            final int posState = (int) nowPos64 & m_PosStateMask;
             if (m_RangeDecoder.DecodeBit(m_IsMatchDecoders, (state << Base.kNumPosStatesBitsMax) + posState) == 0) {
-                LiteralDecoder.Decoder2 decoder2 = m_LiteralDecoder.GetDecoder((int) nowPos64, prevByte);
-                if (!Base.StateIsCharState(state)) {
-                    prevByte = decoder2.DecodeWithMatchByte(m_RangeDecoder, m_OutWindow.GetByte(rep0));
-                } else {
+                final LiteralDecoder.Decoder2 decoder2 = m_LiteralDecoder.GetDecoder((int) nowPos64, prevByte);
+                if (Base.isStateOneWhereAtLastACharWasFound(state)) {
                     prevByte = decoder2.DecodeNormal(m_RangeDecoder);
+                } else {
+                    prevByte = decoder2.DecodeWithMatchByte(m_RangeDecoder, m_OutWindow.GetByte(rep0));
                 }
                 m_OutWindow.PutByte(prevByte);
-                state = Base.StateUpdateChar(state);
+                state = Base.getNextStateAfterChar(state);
                 nowPos64++;
             } else {
                 int len;
@@ -231,11 +231,11 @@ public class Decoder {
                     len = 0;
                     if (m_RangeDecoder.DecodeBit(m_IsRepG0Decoders, state) == 0) {
                         if (m_RangeDecoder.DecodeBit(m_IsRep0LongDecoders, (state << Base.kNumPosStatesBitsMax) + posState) == 0) {
-                            state = Base.StateUpdateShortRep(state);
+                            state = Base.getNextStateAfterShortRep(state);
                             len = 1;
                         }
                     } else {
-                        int distance;
+                        final int distance;
                         if (m_RangeDecoder.DecodeBit(m_IsRepG1Decoders, state) == 0) {
                             distance = rep1;
                         } else {
@@ -252,17 +252,17 @@ public class Decoder {
                     }
                     if (len == 0) {
                         len = m_RepLenDecoder.Decode(m_RangeDecoder, posState) + Base.kMatchMinLen;
-                        state = Base.StateUpdateRep(state);
+                        state = Base.getNextStateAfterRep(state);
                     }
                 } else {
                     rep3 = rep2;
                     rep2 = rep1;
                     rep1 = rep0;
                     len = Base.kMatchMinLen + m_LenDecoder.Decode(m_RangeDecoder, posState);
-                    state = Base.StateUpdateMatch(state);
-                    int posSlot = m_PosSlotDecoder[Base.GetLenToPosState(len)].Decode(m_RangeDecoder);
+                    state = Base.getNextStateAfterMatch(state);
+                    final int posSlot = m_PosSlotDecoder[Base.GetLenToPosState(len)].Decode(m_RangeDecoder);
                     if (posSlot >= Base.kStartPosModelIndex) {
-                        int numDirectBits = (posSlot >> 1) - 1;
+                        final int numDirectBits = (posSlot >> 1) - 1;
                         rep0 = ((2 | (posSlot & 1)) << numDirectBits);
                         if (posSlot < Base.kEndPosModelIndex) {
                             rep0 += ReverseDecode(m_PosDecoders,
@@ -301,11 +301,11 @@ public class Decoder {
         if (properties.length < 5) {
             return false;
         }
-        int val = properties[0] & 0xFF;
-        int lc = val % 9;
-        int remainder = val / 9;
-        int lp = remainder % 5;
-        int pb = remainder / 5;
+        final int val = properties[0] & 0xFF;
+        final int lc = val % 9;
+        final int remainder = val / 9;
+        final int lp = remainder % 5;
+        final int pb = remainder / 5;
         int dictionarySize = 0;
         for (int i = 0; i < 4; i++) {
             dictionarySize += ((int) (properties[1 + i]) & 0xFF) << (i * 8);

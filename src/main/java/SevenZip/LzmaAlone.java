@@ -54,7 +54,7 @@ public class LzmaAlone {
             } else if (s.startsWith("eos")) {
                 Eos = true;
             } else if (s.startsWith("mf")) {
-                String mfs = s.substring(2);
+                final String mfs = s.substring(2);
                 if (mfs.equals("bt2")) {
                     MatchFinder = 0;
                 } else if (mfs.equals("bt4")) {
@@ -83,7 +83,7 @@ public class LzmaAlone {
                         continue;
                     }
                     if (s.charAt(0) == '-') {
-                        String sw = s.substring(1).toLowerCase();
+                        final String sw = s.substring(1).toLowerCase();
                         if (sw.length() == 0) {
                             return false;
                         }
@@ -158,7 +158,7 @@ public class LzmaAlone {
             return;
         }
 
-        CommandLine params = new CommandLine();
+        final CommandLine params = new CommandLine();
         if (!params.Parse(args)) {
             System.out.println("\nIncorrect command");
             return;
@@ -174,18 +174,18 @@ public class LzmaAlone {
             }
             LzmaBench.LzmaBenchmark(params.NumBenchmarkPasses, dictionary);
         } else if (params.Command == CommandLine.kEncode || params.Command == CommandLine.kDecode) {
-            File inFile = new File(params.InFile);
-            File outFile = new File(params.OutFile);
+            final File inFile = new File(params.InFile);
+            final File outFile = new File(params.OutFile);
 
-            BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(inFile));
-            BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(outFile));
+            final BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(inFile));
+            final BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(outFile));
 
             boolean eos = false;
             if (params.Eos) {
                 eos = true;
             }
             if (params.Command == CommandLine.kEncode) {
-                Encoder encoder = new Encoder();
+                final Encoder encoder = new Encoder();
                 if (!encoder.SetAlgorithm(params.Algorithm)) {
                     throw new Exception("Incorrect compression mode");
                 }
@@ -203,7 +203,7 @@ public class LzmaAlone {
                 }
                 encoder.SetEndMarkerMode(eos);
                 encoder.WriteCoderProperties(outStream);
-                long fileSize;
+                final long fileSize;
                 if (eos) {
                     fileSize = -1;
                 } else {
@@ -214,18 +214,18 @@ public class LzmaAlone {
                 }
                 encoder.Code(inStream, outStream, -1, -1, null);
             } else {
-                int propertiesSize = 5;
-                byte[] properties = new byte[propertiesSize];
+                final int propertiesSize = 5;
+                final byte[] properties = new byte[propertiesSize];
                 if (inStream.read(properties, 0, propertiesSize) != propertiesSize) {
                     throw new Exception("input .lzma file is too short");
                 }
-                Decoder decoder = new Decoder();
+                final Decoder decoder = new Decoder();
                 if (!decoder.SetDecoderProperties(properties)) {
                     throw new Exception("Incorrect stream properties");
                 }
                 long outSize = 0;
                 for (int i = 0; i < 8; i++) {
-                    int v = inStream.read();
+                    final int v = inStream.read();
                     if (v < 0) {
                         throw new Exception("Can't read stream size");
                     }

@@ -28,7 +28,7 @@ public class BitTreeDecoder {
         int m = 1;
         int symbol = 0;
         for (int bitIndex = 0; bitIndex < NumBitLevels; bitIndex++) {
-            int bit = rangeDecoder.DecodeBit(Models, m);
+            final int bit = rangeDecoder.DecodeBit(Models, m);
             m <<= 1;
             m += bit;
             symbol |= (bit << bitIndex);

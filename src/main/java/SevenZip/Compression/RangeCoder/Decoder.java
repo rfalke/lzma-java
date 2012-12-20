@@ -28,7 +28,7 @@ public class Decoder extends RangeBase {
         int result = 0;
         for (int i = numTotalBits; i != 0; i--) {
             Range >>>= 1;
-            int t = ((Code - Range) >>> 31);
+            final int t = ((Code - Range) >>> 31);
             Code -= Range & (t - 1);
             result = (result << 1) | (1 - t);
 
@@ -41,8 +41,8 @@ public class Decoder extends RangeBase {
     }
 
     public int DecodeBit(short[] probs, int index) throws IOException {
-        int prob = probs[index];
-        int newBound = (Range >>> kNumBitModelTotalBits) * prob;
+        final int prob = probs[index];
+        final int newBound = (Range >>> kNumBitModelTotalBits) * prob;
         if ((Code ^ 0x80000000) < (newBound ^ 0x80000000)) {
             Range = newBound;
             probs[index] = (short) (prob + ((kBitModelTotal - prob) >>> kNumMoveBits));

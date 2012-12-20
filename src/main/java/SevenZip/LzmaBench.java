@@ -82,7 +82,7 @@ public class LzmaBench {
         }
 
         int GetLogRandBits(int numBits) {
-            int len = RG.GetRnd(numBits);
+            final int len = RG.GetRnd(numBits);
             return RG.GetRnd((int) len);
         }
 
@@ -108,7 +108,7 @@ public class LzmaBench {
                 if (GetRndBit() == 0 || Pos < 1) {
                     Buffer[Pos++] = (byte) (RG.GetRnd(8));
                 } else {
-                    int len;
+                    final int len;
                     if (RG.GetRnd(3) == 0) {
                         len = 1 + GetLen1();
                     } else {
@@ -243,14 +243,14 @@ public class LzmaBench {
     }
 
     private static long GetCompressRating(int dictionarySize, long elapsedTime, long size) {
-        long t = GetLogSize(dictionarySize) - (18 << kSubBits);
-        long numCommandsForOne = 1060 + ((t * t * 10) >> (2 * kSubBits));
-        long numCommands = (long) (size) * numCommandsForOne;
+        final long t = GetLogSize(dictionarySize) - (18 << kSubBits);
+        final long numCommandsForOne = 1060 + ((t * t * 10) >> (2 * kSubBits));
+        final long numCommands = (long) (size) * numCommandsForOne;
         return MyMultDiv64(numCommands, elapsedTime);
     }
 
     private static long GetDecompressRating(long elapsedTime, long outSize, long inSize) {
-        long numCommands = inSize * 220 + outSize * 20;
+        final long numCommands = inSize * 220 + outSize * 20;
         return MyMultDiv64(numCommands, elapsedTime);
     }
 
@@ -282,10 +282,10 @@ public class LzmaBench {
             long elapsedTime,
             long size,
             boolean decompressMode, long secondSize) {
-        long speed = MyMultDiv64(size, elapsedTime);
+        final long speed = MyMultDiv64(size, elapsedTime);
         PrintValue(speed / 1024);
         System.out.print(" KB/s  ");
-        long rating;
+        final long rating;
         if (decompressMode) {
             rating = GetDecompressRating(elapsedTime, size, secondSize);
         } else {
@@ -304,30 +304,30 @@ public class LzmaBench {
         }
         System.out.print("\n       Compressing                Decompressing\n\n");
 
-        Encoder encoder = new Encoder();
-        Decoder decoder = new Decoder();
+        final Encoder encoder = new Encoder();
+        final Decoder decoder = new Decoder();
 
         if (!encoder.SetDictionarySize(dictionarySize)) {
             throw new Exception("Incorrect dictionary size");
         }
 
-        int kBufferSize = dictionarySize + kAdditionalSize;
-        int kCompressedBufferSize = (kBufferSize / 2) + kCompressedAdditionalSize;
+        final int kBufferSize = dictionarySize + kAdditionalSize;
+        final int kCompressedBufferSize = (kBufferSize / 2) + kCompressedAdditionalSize;
 
-        ByteArrayOutputStream propStream = new ByteArrayOutputStream();
+        final ByteArrayOutputStream propStream = new ByteArrayOutputStream();
         encoder.WriteCoderProperties(propStream);
-        byte[] propArray = propStream.toByteArray();
+        final byte[] propArray = propStream.toByteArray();
         decoder.SetDecoderProperties(propArray);
 
-        CBenchRandomGenerator rg = new CBenchRandomGenerator();
+        final CBenchRandomGenerator rg = new CBenchRandomGenerator();
 
         rg.Set(kBufferSize);
         rg.Generate();
-        CRC crc = new CRC();
+        final CRC crc = new CRC();
         crc.Init();
         crc.Update(rg.Buffer, 0, rg.BufferSize);
 
-        CProgressInfo progressInfo = new CProgressInfo();
+        final CProgressInfo progressInfo = new CProgressInfo();
         progressInfo.ApprovedStart = dictionarySize;
 
         long totalBenchSize = 0;
@@ -335,11 +335,11 @@ public class LzmaBench {
         long totalDecodeTime = 0;
         long totalCompressedSize = 0;
 
-        MyInputStream inStream = new MyInputStream(rg.Buffer, rg.BufferSize);
+        final MyInputStream inStream = new MyInputStream(rg.Buffer, rg.BufferSize);
 
-        byte[] compressedBuffer = new byte[kCompressedBufferSize];
-        MyOutputStream compressedStream = new MyOutputStream(compressedBuffer);
-        CrcOutStream crcOutStream = new CrcOutStream();
+        final byte[] compressedBuffer = new byte[kCompressedBufferSize];
+        final MyOutputStream compressedStream = new MyOutputStream(compressedBuffer);
+        final CrcOutStream crcOutStream = new CrcOutStream();
         MyInputStream inputCompressedStream = null;
         int compressedSize = 0;
         for (int i = 0; i < numIterations; i++) {
@@ -347,7 +347,7 @@ public class LzmaBench {
             inStream.reset();
             compressedStream.reset();
             encoder.Code(inStream, compressedStream, -1, -1, progressInfo);
-            long encodeTime = System.currentTimeMillis() - progressInfo.Time;
+            final long encodeTime = System.currentTimeMillis() - progressInfo.Time;
 
             if (i == 0) {
                 compressedSize = compressedStream.size();
@@ -365,8 +365,8 @@ public class LzmaBench {
                 inputCompressedStream.reset();
                 crcOutStream.Init();
 
-                long outSize = kBufferSize;
-                long startTime = System.currentTimeMillis();
+                final long outSize = kBufferSize;
+                final long startTime = System.currentTimeMillis();
                 if (!decoder.Code(inputCompressedStream, crcOutStream, outSize)) {
                     throw (new Exception("Decoding Error"));
                 }
@@ -375,7 +375,7 @@ public class LzmaBench {
                     throw (new Exception("CRC Error"));
                 }
             }
-            long benchSize = kBufferSize - (long) progressInfo.InSize;
+            final long benchSize = kBufferSize - (long) progressInfo.InSize;
             PrintResults(dictionarySize, encodeTime, benchSize, false, 0);
             System.out.print("     ");
             PrintResults(dictionarySize, decodeTime, kBufferSize, true, compressedSize);
