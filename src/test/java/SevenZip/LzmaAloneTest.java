@@ -21,8 +21,7 @@ public class LzmaAloneTest {
     public TemporaryFolder _temporaryFolder = new TemporaryFolder();
 
     @Test
-    public void testBinaryFile() throws Exception {
-
+    public void testRoundTrip() throws Exception {
         final File inputFile = new File("src/test/java/SevenZip/firefox.exe");
         assertRoundTrip(inputFile, "93c6983fcfa73e55099a11ee13139687", 138940);
         assertRoundTrip(inputFile, "4b9287512dcf72b094abafbd5fbfda85", 138946, "-eos");
@@ -36,6 +35,14 @@ public class LzmaAloneTest {
         assertRoundTrip(inputFile, "563da117b34b52358e24d6e5b16d093d", 142879, "-pb0");
         assertRoundTrip(inputFile, "cbbff9f4722065bec54336a7d3d49832", 140046, "-pb4");
         assertRoundTrip(inputFile, "126f88731f968265bf163b7f7b5521db", 138877, "-mfbt2");
+    }
+
+    @Test
+    public void testBenchmark() throws Exception {
+        List<String> args = new ArrayList<String>();
+        args.add("b");
+        args.add("2");
+        LzmaAlone.main(args.toArray(new String[args.size()]));
     }
 
     private void assertRoundTrip(File inputFile, String md5, long expectedLength, String... compressionParameters) throws Exception {
