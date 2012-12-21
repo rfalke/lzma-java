@@ -2,6 +2,8 @@
 
 package SevenZip.Compression.LZ;
 
+import SevenZip.CRC;
+
 import java.io.IOException;
 
 
@@ -44,7 +46,6 @@ public class BinTree extends InWindow {
         }
     }
 
-
     public void Init() throws IOException {
         super.Init();
         for (int i = 0; i < _hashSizeSum; i++) {
@@ -63,7 +64,6 @@ public class BinTree extends InWindow {
             Normalize();
         }
     }
-
 
     public boolean Create(int historySize, int keepAddBufferBefore,
                           int matchMaxLen, int keepAddBufferAfter) {
@@ -334,19 +334,5 @@ public class BinTree extends InWindow {
         _cutValue = cutValue;
     }
 
-    private static final int[] CrcTable = new int[256];
-
-    static {
-        for (int i = 0; i < 256; i++) {
-            int r = i;
-            for (int j = 0; j < 8; j++) {
-                if ((r & 1) != 0) {
-                    r = (r >>> 1) ^ 0xEDB88320;
-                } else {
-                    r >>>= 1;
-                }
-            }
-            CrcTable[i] = r;
-        }
-    }
+    private static final int[] CrcTable = CRC.Table;
 }

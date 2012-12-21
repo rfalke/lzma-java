@@ -3,7 +3,7 @@
 package SevenZip;
 
 public class CRC {
-    private static final int[] Table = new int[256];
+    public static final int[] Table = new int[256];
 
     static {
         for (int i = 0; i < 256; i++) {
