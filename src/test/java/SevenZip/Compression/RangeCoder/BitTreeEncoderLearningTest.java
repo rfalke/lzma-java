@@ -15,12 +15,12 @@ public class BitTreeEncoderLearningTest {
     public void test_getPrice() throws IOException {
         final BitTreeEncoder treeEncoder = new BitTreeEncoder(3);
         treeEncoder.Init();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        Encoder rangeEncoder = new Encoder();
+        final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        final Encoder rangeEncoder = new Encoder();
         rangeEncoder.setStream(stream);
         rangeEncoder.init();
 
-        treeEncoder.Encode(rangeEncoder, 3);
+        treeEncoder.encode(rangeEncoder, 3);
         assertThat(treeEncoder.getPrice(0), is(194));
         assertThat(treeEncoder.getPrice(1), is(194));
         assertThat(treeEncoder.getPrice(2), is(192));
@@ -34,11 +34,11 @@ public class BitTreeEncoderLearningTest {
     @Test
     public void print_prices() {
         for (int i = 1; i < ProbPrices.ProbPrices.length; i++) {
-            int probPrice = ProbPrices.ProbPrices[i];
-            int prob = i << ProbPrices.kNumMoveReducingBits;
-            int bits = Integer.numberOfTrailingZeros(highestOneBit(i)) + 1;
-            int offset1 = i - highestOneBit(i);
-            int offset2 = 2 * highestOneBit(i) - i;
+            final int probPrice = ProbPrices.ProbPrices[i];
+            final int prob = i << ProbPrices.kNumMoveReducingBits;
+            final int bits = Integer.numberOfTrailingZeros(highestOneBit(i)) + 1;
+            final int offset1 = i - highestOneBit(i);
+            final int offset2 = 2 * highestOneBit(i) - i;
             System.out.printf("i=%3d prob = %4d = 0x%3x = %f price=%d bits=%d = %d offset=%d,%d\n", i, prob, prob, prob / 2048.0, probPrice, bits, (8 - bits) * 64, offset1, offset2);
         }
     }

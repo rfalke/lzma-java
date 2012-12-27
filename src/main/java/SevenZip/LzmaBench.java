@@ -16,7 +16,7 @@ public class LzmaBench {
         int A1;
         int A2;
 
-        public CRandomGenerator() {
+        CRandomGenerator() {
             Init();
         }
 
@@ -138,14 +138,17 @@ public class LzmaBench {
             return CRC.GetDigest();
         }
 
+        @Override
         public void write(byte[] b) {
             CRC.Update(b);
         }
 
+        @Override
         public void write(byte[] b, int off, int len) {
             CRC.Update(b, off, len);
         }
 
+        @Override
         public void write(int b) {
             CRC.UpdateByte(b);
         }
@@ -165,6 +168,7 @@ public class LzmaBench {
             _pos = 0;
         }
 
+        @Override
         public void write(int b) throws IOException {
             if (_pos >= _size) {
                 throw new IOException("Error");
@@ -187,10 +191,12 @@ public class LzmaBench {
             _size = size;
         }
 
+        @Override
         public void reset() {
             _pos = 0;
         }
 
+        @Override
         public int read() {
             if (_pos >= _size) {
                 return -1;
@@ -208,6 +214,7 @@ public class LzmaBench {
             InSize = 0;
         }
 
+        @Override
         public void SetProgress(long inSize, long outSize) {
             if (inSize >= ApprovedStart && InSize == 0) {
                 Time = System.currentTimeMillis();
@@ -294,7 +301,7 @@ public class LzmaBench {
         PrintRating(rating);
     }
 
-    static public int LzmaBenchmark(int numIterations, int dictionarySize) throws Exception {
+    public static int LzmaBenchmark(int numIterations, int dictionarySize) throws Exception {
         if (numIterations <= 0) {
             return 0;
         }

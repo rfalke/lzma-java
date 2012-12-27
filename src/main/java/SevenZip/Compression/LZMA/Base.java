@@ -6,6 +6,9 @@ public class Base {
     public static final int kNumRepDistances = 4;
     public static final int kNumStates = 12;
 
+    private Base() {
+    }
+
     public static int getInitialState() {
         return 0;
     }

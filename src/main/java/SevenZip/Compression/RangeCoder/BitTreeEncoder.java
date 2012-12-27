@@ -12,10 +12,10 @@ public class BitTreeEncoder {
     }
 
     public void Init() {
-        Decoder.InitBitModels(probs);
+        RangeBase.InitBitModels(probs);
     }
 
-    public void Encode(Encoder rangeEncoder, int symbol) throws IOException {
+    public void encode(Encoder rangeEncoder, int symbol) throws IOException {
         int m = 1;
         for (int bitIndex = NumBitLevels; bitIndex != 0; ) {
             bitIndex--;

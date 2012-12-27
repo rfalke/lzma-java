@@ -46,6 +46,7 @@ public class BinTree extends InWindow {
         }
     }
 
+    @Override
     public void Init() throws IOException {
         super.Init();
         for (int i = 0; i < _hashSizeSum; i++) {
@@ -55,6 +56,7 @@ public class BinTree extends InWindow {
         ReduceOffsets(-1);
     }
 
+    @Override
     protected void MovePos() throws IOException {
         if (++_cyclicBufferPos >= _cyclicBufferSize) {
             _cyclicBufferPos = 0;
@@ -107,7 +109,7 @@ public class BinTree extends InWindow {
         return true;
     }
 
-    public int GetMatches(int[] distances) throws IOException {
+    public int GetMatches(int... distances) throws IOException {
         final int lenLimit;
         if (_pos + _matchMaxLen <= _streamPos) {
             lenLimit = _matchMaxLen;
@@ -170,7 +172,8 @@ public class BinTree extends InWindow {
         int ptr0 = (_cyclicBufferPos << 1) + 1;
         int ptr1 = (_cyclicBufferPos << 1);
 
-        int len0, len1;
+        int len0;
+        int len1;
         len0 = len1 = kNumHashDirectBytes;
 
         if (kNumHashDirectBytes != 0) {
@@ -265,7 +268,8 @@ public class BinTree extends InWindow {
             int ptr0 = (_cyclicBufferPos << 1) + 1;
             int ptr1 = (_cyclicBufferPos << 1);
 
-            int len0, len1;
+            int len0;
+            int len1;
             len0 = len1 = kNumHashDirectBytes;
 
             int count = _cutValue;

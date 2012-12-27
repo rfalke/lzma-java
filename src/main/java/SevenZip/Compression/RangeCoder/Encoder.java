@@ -59,7 +59,7 @@ public class Encoder extends RangeBase {
             if (((v >>> i) & 1) == 1) {
                 _low += _range;
             }
-            if ((_range & Encoder.kTopMask) == 0) {
+            if ((_range & RangeBase.kTopMask) == 0) {
                 _range <<= 8;
                 shiftLow();
             }

@@ -9,10 +9,10 @@ public class CRC {
         for (int i = 0; i < 256; i++) {
             int r = i;
             for (int j = 0; j < 8; j++) {
-                if ((r & 1) != 0) {
-                    r = (r >>> 1) ^ 0xEDB88320;
-                } else {
+                if ((r & 1) == 0) {
                     r >>>= 1;
+                } else {
+                    r = (r >>> 1) ^ 0xEDB88320;
                 }
             }
             Table[i] = r;
@@ -32,9 +32,8 @@ public class CRC {
     }
 
     public void Update(byte[] data) {
-        final int size = data.length;
-        for (int i = 0; i < size; i++) {
-            _value = Table[(_value ^ data[i]) & 0xFF] ^ (_value >>> 8);
+        for (byte aByte : data) {
+            _value = Table[(_value ^ aByte) & 0xFF] ^ (_value >>> 8);
         }
     }
 

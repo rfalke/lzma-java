@@ -13,7 +13,7 @@ public class BitTreeDecoder {
     }
 
     public void Init() {
-        Decoder.InitBitModels(Models);
+        RangeBase.InitBitModels(Models);
     }
 
     public int Decode(Decoder rangeDecoder) throws IOException {

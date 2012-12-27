@@ -330,11 +330,11 @@ public class Encoder {
 
         final int lenMain;
         int numDistancePairs;
-        if (!_longestMatchWasFound) {
-            lenMain = ReadMatchDistances();
-        } else {
+        if (_longestMatchWasFound) {
             lenMain = _longestMatchLength;
             _longestMatchWasFound = false;
+        } else {
+            lenMain = ReadMatchDistances();
         }
         numDistancePairs = _numDistancePairs;
 
@@ -790,7 +790,7 @@ public class Encoder {
         _lenEncoder.Encode(_rangeEncoder, len - Base.kMatchMinLen, posState);
         final int posSlot = (1 << Base.kNumPosSlotBits) - 1;
         final int lenToPosState = Base.GetLenToPosState(len);
-        _posSlotEncoder[lenToPosState].Encode(_rangeEncoder, posSlot);
+        _posSlotEncoder[lenToPosState].encode(_rangeEncoder, posSlot);
         final int footerBits = 30;
         final int posReduced = (1 << footerBits) - 1;
         _rangeEncoder.encodeDirectBits(posReduced >> Base.kNumAlignBits, footerBits - Base.kNumAlignBits);
@@ -904,7 +904,7 @@ public class Encoder {
                 pos -= Base.kNumRepDistances;
                 final int posSlot = GetPosSlot(pos);
                 final int lenToPosState = Base.GetLenToPosState(len);
-                _posSlotEncoder[lenToPosState].Encode(_rangeEncoder, posSlot);
+                _posSlotEncoder[lenToPosState].encode(_rangeEncoder, posSlot);
 
                 if (posSlot >= Base.kStartPosModelIndex) {
                     final int footerBits = (int) ((posSlot >> 1) - 1);

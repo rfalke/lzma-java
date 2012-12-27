@@ -10,7 +10,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 public class LzmaAlone {
-    static public class CommandLine {
+    private LzmaAlone() {
+    }
+
+    public static class CommandLine {
         public static final int kEncode = 0;
         public static final int kDecode = 1;
         public static final int kBenchmak = 2;
@@ -70,11 +73,11 @@ public class LzmaAlone {
             return true;
         }
 
-        protected boolean Parse(String[] args) {
+        protected boolean Parse(String... args) {
             int pos = 0;
             boolean switchMode = true;
             for (String s : args) {
-                if (s.length() == 0) {
+                if (s.isEmpty()) {
                     return false;
                 }
                 if (switchMode) {
@@ -84,7 +87,7 @@ public class LzmaAlone {
                     }
                     if (s.charAt(0) == '-') {
                         final String sw = s.substring(1).toLowerCase();
-                        if (sw.length() == 0) {
+                        if (sw.isEmpty()) {
                             return false;
                         }
                         try {

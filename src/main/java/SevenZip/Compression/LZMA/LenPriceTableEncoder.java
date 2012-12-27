@@ -28,6 +28,7 @@ class LenPriceTableEncoder extends LenEncoder {
         }
     }
 
+    @Override
     public void Encode(Encoder rangeEncoder, int symbol, int posState) throws IOException {
         super.Encode(rangeEncoder, symbol, posState);
         if (--_counters[posState] == 0) {

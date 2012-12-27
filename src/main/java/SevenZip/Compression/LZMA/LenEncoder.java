@@ -33,16 +33,16 @@ class LenEncoder {
     protected void Encode(Encoder rangeEncoder, int symbol, int posState) throws IOException {
         if (symbol < Base.kNumLowLenSymbols) {
             rangeEncoder.encode(_choice, 0, 0);
-            _lowCoder[posState].Encode(rangeEncoder, symbol);
+            _lowCoder[posState].encode(rangeEncoder, symbol);
         } else {
             symbol -= Base.kNumLowLenSymbols;
             rangeEncoder.encode(_choice, 0, 1);
             if (symbol < Base.kNumMidLenSymbols) {
                 rangeEncoder.encode(_choice, 1, 0);
-                _midCoder[posState].Encode(rangeEncoder, symbol);
+                _midCoder[posState].encode(rangeEncoder, symbol);
             } else {
                 rangeEncoder.encode(_choice, 1, 1);
-                _highCoder.Encode(rangeEncoder, symbol - Base.kNumMidLenSymbols);
+                _highCoder.encode(rangeEncoder, symbol - Base.kNumMidLenSymbols);
             }
         }
     }

@@ -49,7 +49,7 @@ public class EncoderLearningTest {
 
     @Test
     public void test_show_probs() throws Exception {
-        int bits[] = new int[]{0, 0, 0, 0, 1, 1, 1, 1};
+        int[] bits = {0, 0, 0, 0, 1, 1, 1, 1};
         System.out.printf("initial:              prob = %4d = 0x%3x = %f\n", _probs[4], _probs[4], _probs[4] / 2048.0);
         for (int bit : bits) {
             _encoder.encode(_probs, 4, bit);

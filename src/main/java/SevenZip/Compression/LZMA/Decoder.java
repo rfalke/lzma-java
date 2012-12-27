@@ -2,6 +2,7 @@ package SevenZip.Compression.LZMA;
 
 import SevenZip.Compression.LZ.OutWindow;
 import SevenZip.Compression.RangeCoder.BitTreeDecoder;
+import SevenZip.Compression.RangeCoder.RangeBase;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +22,7 @@ public class Decoder {
         return symbol;
     }
 
-    class LenDecoder {
+    static class LenDecoder {
         final short[] m_Choice = new short[2];
         final BitTreeDecoder[] m_LowCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
         final BitTreeDecoder[] m_MidCoder = new BitTreeDecoder[Base.kNumPosStatesMax];
@@ -36,7 +37,7 @@ public class Decoder {
         }
 
         protected void Init() {
-            SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_Choice);
+            RangeBase.InitBitModels(m_Choice);
             for (int posState = 0; posState < m_NumPosStates; posState++) {
                 m_LowCoder[posState].Init();
                 m_MidCoder[posState].Init();
@@ -63,7 +64,7 @@ public class Decoder {
             final short[] m_Decoders = new short[0x300];
 
             public void Init() {
-                SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_Decoders);
+                RangeBase.InitBitModels(m_Decoders);
             }
 
             protected byte DecodeNormal(SevenZip.Compression.RangeCoder.Decoder rangeDecoder) throws IOException {
@@ -183,13 +184,13 @@ public class Decoder {
     void Init() throws IOException {
         m_OutWindow.Init(false);
 
-        SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_IsMatchDecoders);
-        SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_IsRep0LongDecoders);
-        SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_IsRepDecoders);
-        SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_IsRepG0Decoders);
-        SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_IsRepG1Decoders);
-        SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_IsRepG2Decoders);
-        SevenZip.Compression.RangeCoder.Decoder.InitBitModels(m_PosDecoders);
+        RangeBase.InitBitModels(m_IsMatchDecoders);
+        RangeBase.InitBitModels(m_IsRep0LongDecoders);
+        RangeBase.InitBitModels(m_IsRepDecoders);
+        RangeBase.InitBitModels(m_IsRepG0Decoders);
+        RangeBase.InitBitModels(m_IsRepG1Decoders);
+        RangeBase.InitBitModels(m_IsRepG2Decoders);
+        RangeBase.InitBitModels(m_PosDecoders);
 
         m_LiteralDecoder.Init();
         int i;
@@ -209,7 +210,10 @@ public class Decoder {
         Init();
 
         int state = Base.getInitialState();
-        int rep0 = 0, rep1 = 0, rep2 = 0, rep3 = 0;
+        int rep0 = 0;
+        int rep1 = 0;
+        int rep2 = 0;
+        int rep3 = 0;
 
         long nowPos64 = 0;
         byte prevByte = 0;
@@ -297,7 +301,7 @@ public class Decoder {
         return true;
     }
 
-    public boolean SetDecoderProperties(byte[] properties) {
+    public boolean SetDecoderProperties(byte... properties) {
         if (properties.length < 5) {
             return false;
         }

@@ -10,7 +10,6 @@ public class ProbPrices {
         for (int i = kNumBits - 1; i >= 0; i--) {
             final int start = 1 << (kNumBits - i - 1);
             final int end = 1 << (kNumBits - i);
-            System.out.println(start+" "+end+" "+i);
             for (int j = start; j < end; j++) {
                 ProbPrices[j] = (i << kNumBitPriceShiftBits) +
                         (((end - j) << kNumBitPriceShiftBits) >>> (kNumBits - i - 1));
@@ -18,7 +17,10 @@ public class ProbPrices {
         }
     }
 
-    static public int getPrice(int prob, int symbol) {
+    private ProbPrices() {
+    }
+
+    public static int getPrice(int prob, int symbol) {
         final int mask = RangeBase.kBitModelTotal - 1;
         final int a = prob - symbol;
         final int b = -symbol;
@@ -26,11 +28,11 @@ public class ProbPrices {
         return ProbPrices[(c & mask) >>> kNumMoveReducingBits];
     }
 
-    static public int GetPrice0(int Prob) {
+    public static int GetPrice0(int Prob) {
         return ProbPrices[Prob >>> kNumMoveReducingBits];
     }
 
-    static public int GetPrice1(int Prob) {
+    public static int GetPrice1(int Prob) {
         return ProbPrices[(RangeBase.kBitModelTotal - Prob) >>> kNumMoveReducingBits];
     }
 }
