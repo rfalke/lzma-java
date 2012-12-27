@@ -83,7 +83,7 @@ public class Encoder {
     private final int[] _matchDistances = new int[Base.kMatchMaxLen * 2 + 2];
 
     private int _matchPriceCount;
-    private BinTree _matchFinder = null;
+    private BinTree _matchFinder;
 
     private int _numFastBytes = kNumFastBytesDefault;
     private int _longestMatchLength;
@@ -891,9 +891,7 @@ public class Encoder {
                 }
                 final int distance = _repDistances[pos];
                 if (pos != 0) {
-                    for (int i = pos; i >= 1; i--) {
-                        _repDistances[i] = _repDistances[i - 1];
-                    }
+                    System.arraycopy(_repDistances, 0, _repDistances, 1, pos);
                     _repDistances[0] = distance;
                 }
             } else {
@@ -920,9 +918,7 @@ public class Encoder {
                     }
                 }
                 final int distance = pos;
-                for (int i = Base.kNumRepDistances - 1; i >= 1; i--) {
-                    _repDistances[i] = _repDistances[i - 1];
-                }
+                System.arraycopy(_repDistances, 0, _repDistances, 1, Base.kNumRepDistances - 1);
                 _repDistances[0] = distance;
                 _matchPriceCount++;
             }
