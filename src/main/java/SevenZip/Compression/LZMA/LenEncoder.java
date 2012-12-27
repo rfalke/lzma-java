@@ -32,16 +32,16 @@ class LenEncoder {
 
     protected void Encode(Encoder rangeEncoder, int symbol, int posState) throws IOException {
         if (symbol < Base.kNumLowLenSymbols) {
-            rangeEncoder.Encode(_choice, 0, 0);
+            rangeEncoder.encode(_choice, 0, 0);
             _lowCoder[posState].Encode(rangeEncoder, symbol);
         } else {
             symbol -= Base.kNumLowLenSymbols;
-            rangeEncoder.Encode(_choice, 0, 1);
+            rangeEncoder.encode(_choice, 0, 1);
             if (symbol < Base.kNumMidLenSymbols) {
-                rangeEncoder.Encode(_choice, 1, 0);
+                rangeEncoder.encode(_choice, 1, 0);
                 _midCoder[posState].Encode(rangeEncoder, symbol);
             } else {
-                rangeEncoder.Encode(_choice, 1, 1);
+                rangeEncoder.encode(_choice, 1, 1);
                 _highCoder.Encode(rangeEncoder, symbol - Base.kNumMidLenSymbols);
             }
         }
@@ -57,16 +57,16 @@ class LenEncoder {
             if (i >= numSymbols) {
                 return;
             }
-            prices[st + i] = a0 + _lowCoder[posState].GetPrice(i);
+            prices[st + i] = a0 + _lowCoder[posState].getPrice(i);
         }
         for (; i < Base.kNumLowLenSymbols + Base.kNumMidLenSymbols; i++) {
             if (i >= numSymbols) {
                 return;
             }
-            prices[st + i] = b0 + _midCoder[posState].GetPrice(i - Base.kNumLowLenSymbols);
+            prices[st + i] = b0 + _midCoder[posState].getPrice(i - Base.kNumLowLenSymbols);
         }
         for (; i < numSymbols; i++) {
-            prices[st + i] = b1 + _highCoder.GetPrice(i - Base.kNumLowLenSymbols - Base.kNumMidLenSymbols);
+            prices[st + i] = b1 + _highCoder.getPrice(i - Base.kNumLowLenSymbols - Base.kNumMidLenSymbols);
         }
     }
 }

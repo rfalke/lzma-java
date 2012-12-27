@@ -18,7 +18,7 @@ class LiteralEncoder {
             int context = 1;
             for (int i = 7; i >= 0; i--) {
                 final int bit = ((symbol >> i) & 1);
-                rangeEncoder.Encode(m_Encoders, context, bit);
+                rangeEncoder.encode(m_Encoders, context, bit);
                 context = (context << 1) | bit;
             }
         }
@@ -34,7 +34,7 @@ class LiteralEncoder {
                     state += ((1 + matchBit) << 8);
                     same = (matchBit == bit);
                 }
-                rangeEncoder.Encode(m_Encoders, state, bit);
+                rangeEncoder.encode(m_Encoders, state, bit);
                 context = (context << 1) | bit;
             }
         }
@@ -47,7 +47,7 @@ class LiteralEncoder {
                 for (; i >= 0; i--) {
                     final int matchBit = (matchByte >> i) & 1;
                     final int bit = (symbol >> i) & 1;
-                    price += ProbPrices.GetPrice(m_Encoders[((1 + matchBit) << 8) + context], bit);
+                    price += ProbPrices.getPrice(m_Encoders[((1 + matchBit) << 8) + context], bit);
                     context = (context << 1) | bit;
                     if (matchBit != bit) {
                         i--;
@@ -57,7 +57,7 @@ class LiteralEncoder {
             }
             for (; i >= 0; i--) {
                 final int bit = (symbol >> i) & 1;
-                price += ProbPrices.GetPrice(m_Encoders[context], bit);
+                price += ProbPrices.getPrice(m_Encoders[context], bit);
                 context = (context << 1) | bit;
             }
             return price;

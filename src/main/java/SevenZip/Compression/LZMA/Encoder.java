@@ -141,7 +141,7 @@ public class Encoder {
         for (int i = NumBitLevels; i != 0; i--) {
             final int bit = symbol & 1;
             symbol >>>= 1;
-            price += ProbPrices.GetPrice(Models[startIndex + m], bit);
+            price += ProbPrices.getPrice(Models[startIndex + m], bit);
             m = (m << 1) | bit;
         }
         return price;
@@ -152,7 +152,7 @@ public class Encoder {
         int m = 1;
         for (int i = 0; i < NumBitLevels; i++) {
             final int bit = symbol & 1;
-            rangeEncoder.Encode(Models, startIndex + m, bit);
+            rangeEncoder.encode(Models, startIndex + m, bit);
             m = (m << 1) | bit;
             symbol >>= 1;
         }
@@ -201,7 +201,7 @@ public class Encoder {
 
     void Init() {
         BaseInit();
-        _rangeEncoder.Init();
+        _rangeEncoder.init();
 
         RangeBase.InitBitModels(_isMatch);
         RangeBase.InitBitModels(_isRep0Long);
@@ -266,7 +266,7 @@ public class Encoder {
                 price += ProbPrices.GetPrice0(_isRepG1[state]);
             } else {
                 price += ProbPrices.GetPrice1(_isRepG1[state]);
-                price += ProbPrices.GetPrice(_isRepG2[state], repIndex - 2);
+                price += ProbPrices.getPrice(_isRepG2[state], repIndex - 2);
             }
         }
         return price;
@@ -783,8 +783,8 @@ public class Encoder {
             return;
         }
 
-        _rangeEncoder.Encode(_isMatch, (_state << Base.kNumPosStatesBitsMax) + posState, 1);
-        _rangeEncoder.Encode(_isRep, _state, 0);
+        _rangeEncoder.encode(_isMatch, (_state << Base.kNumPosStatesBitsMax) + posState, 1);
+        _rangeEncoder.encode(_isRep, _state, 0);
         _state = Base.getNextStateAfterMatch(_state);
         final int len = Base.kMatchMinLen;
         _lenEncoder.Encode(_rangeEncoder, len - Base.kMatchMinLen, posState);
@@ -793,15 +793,14 @@ public class Encoder {
         _posSlotEncoder[lenToPosState].Encode(_rangeEncoder, posSlot);
         final int footerBits = 30;
         final int posReduced = (1 << footerBits) - 1;
-        _rangeEncoder.EncodeDirectBits(posReduced >> Base.kNumAlignBits, footerBits - Base.kNumAlignBits);
+        _rangeEncoder.encodeDirectBits(posReduced >> Base.kNumAlignBits, footerBits - Base.kNumAlignBits);
         _posAlignEncoder.ReverseEncode(_rangeEncoder, posReduced & Base.kAlignMask);
     }
 
     void Flush(int nowPos) throws IOException {
         ReleaseMFStream();
         WriteEndMarker(nowPos & _posStateMask);
-        _rangeEncoder.FlushData();
-        _rangeEncoder.FlushStream();
+        _rangeEncoder.flush();
     }
 
     protected boolean CodeOneBlock(HlContext hlContext) throws IOException {
@@ -829,7 +828,7 @@ public class Encoder {
 
             ReadMatchDistances();
             final int posState = (int) (hlContext.nowPos64) & _posStateMask;
-            _rangeEncoder.Encode(_isMatch, (_state << Base.kNumPosStatesBitsMax) + posState, 0);
+            _rangeEncoder.encode(_isMatch, (_state << Base.kNumPosStatesBitsMax) + posState, 0);
             _state = Base.getNextStateAfterChar(_state);
             final byte curByte = _matchFinder.GetIndexByte(0 - _additionalOffset);
             _literalEncoder.GetSubCoder((int) (hlContext.nowPos64), _previousByte).Encode(_rangeEncoder, curByte);
@@ -854,7 +853,7 @@ public class Encoder {
         final int posState = ((int) hlContext.nowPos64) & _posStateMask;
         final int complexState = (_state << Base.kNumPosStatesBitsMax) + posState;
         if (len == 1 && pos == -1) {
-            _rangeEncoder.Encode(_isMatch, complexState, 0);
+            _rangeEncoder.encode(_isMatch, complexState, 0);
             final byte curByte = _matchFinder.GetIndexByte((int) (0 - _additionalOffset));
             final LiteralEncoder.Encoder2 subCoder = _literalEncoder.GetSubCoder((int) hlContext.nowPos64, _previousByte);
             if (Base.isStateOneWhereAtLastACharWasFound(_state)) {
@@ -866,23 +865,23 @@ public class Encoder {
             _previousByte = curByte;
             _state = Base.getNextStateAfterChar(_state);
         } else {
-            _rangeEncoder.Encode(_isMatch, complexState, 1);
+            _rangeEncoder.encode(_isMatch, complexState, 1);
             if (pos < Base.kNumRepDistances) {
-                _rangeEncoder.Encode(_isRep, _state, 1);
+                _rangeEncoder.encode(_isRep, _state, 1);
                 if (pos == 0) {
-                    _rangeEncoder.Encode(_isRepG0, _state, 0);
+                    _rangeEncoder.encode(_isRepG0, _state, 0);
                     if (len == 1) {
-                        _rangeEncoder.Encode(_isRep0Long, complexState, 0);
+                        _rangeEncoder.encode(_isRep0Long, complexState, 0);
                     } else {
-                        _rangeEncoder.Encode(_isRep0Long, complexState, 1);
+                        _rangeEncoder.encode(_isRep0Long, complexState, 1);
                     }
                 } else {
-                    _rangeEncoder.Encode(_isRepG0, _state, 1);
+                    _rangeEncoder.encode(_isRepG0, _state, 1);
                     if (pos == 1) {
-                        _rangeEncoder.Encode(_isRepG1, _state, 0);
+                        _rangeEncoder.encode(_isRepG1, _state, 0);
                     } else {
-                        _rangeEncoder.Encode(_isRepG1, _state, 1);
-                        _rangeEncoder.Encode(_isRepG2, _state, pos - 2);
+                        _rangeEncoder.encode(_isRepG1, _state, 1);
+                        _rangeEncoder.encode(_isRepG2, _state, pos - 2);
                     }
                 }
                 if (len == 1) {
@@ -899,7 +898,7 @@ public class Encoder {
                     _repDistances[0] = distance;
                 }
             } else {
-                _rangeEncoder.Encode(_isRep, _state, 0);
+                _rangeEncoder.encode(_isRep, _state, 0);
                 _state = Base.getNextStateAfterMatch(_state);
                 _lenEncoder.Encode(_rangeEncoder, len - Base.kMatchMinLen, posState);
                 pos -= Base.kNumRepDistances;
@@ -916,7 +915,7 @@ public class Encoder {
                         ReverseEncode(_posEncoders,
                                 baseVal - posSlot - 1, _rangeEncoder, footerBits, posReduced);
                     } else {
-                        _rangeEncoder.EncodeDirectBits(posReduced >> Base.kNumAlignBits, footerBits - Base.kNumAlignBits);
+                        _rangeEncoder.encodeDirectBits(posReduced >> Base.kNumAlignBits, footerBits - Base.kNumAlignBits);
                         _posAlignEncoder.ReverseEncode(_rangeEncoder, posReduced & Base.kAlignMask);
                         _alignPriceCount++;
                     }
@@ -941,7 +940,7 @@ public class Encoder {
                 FillAlignPrices();
             }
             hlContext.processedInSize = hlContext.nowPos64;
-            hlContext.processedOutSize = _rangeEncoder.GetProcessedSizeAdd();
+            hlContext.processedOutSize = _rangeEncoder.getProcessedSizeAdd();
             if (_matchFinder.GetNumAvailableBytes() == 0) {
                 Flush((int) hlContext.nowPos64);
                 return false;
@@ -964,11 +963,11 @@ public class Encoder {
     }
 
     void SetOutStream(OutputStream outStream) {
-        _rangeEncoder.SetStream(outStream);
+        _rangeEncoder.setStream(outStream);
     }
 
     void ReleaseOutStream() {
-        _rangeEncoder.ReleaseStream();
+        _rangeEncoder.releaseStream();
     }
 
     void ReleaseStreams() {
@@ -1032,10 +1031,10 @@ public class Encoder {
 
             final int st = (lenToPosState << Base.kNumPosSlotBits);
             for (posSlot = 0; posSlot < _distTableSize; posSlot++) {
-                _posSlotPrices[st + posSlot] = encoder.GetPrice(posSlot);
+                _posSlotPrices[st + posSlot] = encoder.getPrice(posSlot);
             }
             for (posSlot = Base.kEndPosModelIndex; posSlot < _distTableSize; posSlot++) {
-                _posSlotPrices[st + posSlot] += ((((posSlot >> 1) - 1) - Base.kNumAlignBits) << SevenZip.Compression.RangeCoder.Encoder.kNumBitPriceShiftBits);
+                _posSlotPrices[st + posSlot] += ((((posSlot >> 1) - 1) - Base.kNumAlignBits) << ProbPrices.kNumBitPriceShiftBits);
             }
 
             final int st2 = lenToPosState * Base.kNumFullDistances;
