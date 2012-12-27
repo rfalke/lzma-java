@@ -232,7 +232,7 @@ public class LzmaAlone {
                     if (v < 0) {
                         throw new Exception("Can't read stream size");
                     }
-                    outSize |= ((long) v) << (8 * i);
+                    outSize |= ((long) v) << (8L * i);
                 }
                 if (!decoder.Code(inStream, outStream, outSize)) {
                     throw new Exception("Error in data stream");

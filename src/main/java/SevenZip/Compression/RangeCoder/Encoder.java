@@ -71,12 +71,12 @@ public class Encoder extends RangeBase {
     }
 
     private void shiftLow() throws IOException {
-        final int LowHi = (int) (_low >>> 32);
-        if (LowHi != 0 || _low < 0xFF000000L) {
+        final int lowHi = (int) (_low >>> 32);
+        if (lowHi != 0 || _low < 0xFF000000L) {
             _position += _cacheSize;
             int temp = _cache;
             do {
-                _stream.write(temp + LowHi);
+                _stream.write(temp + lowHi);
                 temp = 0xFF;
             }
             while (--_cacheSize != 0);

@@ -1,5 +1,6 @@
 package SevenZip;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -39,7 +40,7 @@ public class LzmaAloneTest {
 
     @Test
     public void testBenchmark() throws Exception {
-        List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<String>();
         args.add("b");
         args.add("2");
         LzmaAlone.main(args.toArray(new String[args.size()]));
@@ -54,18 +55,18 @@ public class LzmaAloneTest {
         assertThatFilesAreEqual(inputFile, decompressedFile);
     }
 
-    private String getMd5OfFile(File file) throws IOException {
-        FileInputStream fis = new FileInputStream(file);
-        final String md5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
+    private static String getMd5OfFile(File file) throws IOException {
+        final FileInputStream fis = new FileInputStream(file);
+        final String md5 = DigestUtils.md5Hex(fis);
         return md5;
     }
 
-    private void assertThatFilesAreEqual(File expected, File actual) throws IOException {
+    private static void assertThatFilesAreEqual(File expected, File actual) throws IOException {
         assertBinaryEquals(null, expected, actual);
     }
 
     private File compress(File inputFile, String... compressionParameters) throws Exception {
-        List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<String>();
         args.add("e");
         args.addAll(asList(compressionParameters));
         args.add(inputFile.getCanonicalPath());
@@ -76,7 +77,7 @@ public class LzmaAloneTest {
     }
 
     private File decompress(File inputFile, String... decompressionParameters) throws Exception {
-        List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<String>();
         args.add("d");
         args.addAll(asList(decompressionParameters));
         args.add(inputFile.getCanonicalPath());
@@ -96,8 +97,8 @@ public class LzmaAloneTest {
         Assert.assertNotNull(message, expected);
         Assert.assertNotNull(message, actual);
 
-        Assert.assertTrue("File does not exist [" + expected.getAbsolutePath() + "]", expected.exists());
-        Assert.assertTrue("File does not exist [" + actual.getAbsolutePath() + "]", actual.exists());
+        Assert.assertTrue("File does not exist [" + expected.getAbsolutePath() + ']', expected.exists());
+        Assert.assertTrue("File does not exist [" + actual.getAbsolutePath() + ']', actual.exists());
 
         Assert.assertTrue("Expected file not readable", expected.canRead());
         Assert.assertTrue("Actual file not readable", actual.canRead());
@@ -113,13 +114,13 @@ public class LzmaAloneTest {
             Assert.assertNotNull(message, actual);
 
             final int bufferSize = 1024 * 1024;
-            byte[] expBuff = new byte[bufferSize];
-            byte[] actBuff = new byte[bufferSize];
+            final byte[] expBuff = new byte[bufferSize];
+            final byte[] actBuff = new byte[bufferSize];
 
             long pos = 0;
             while (true) {
-                int expLength = eis.read(expBuff, 0, bufferSize);
-                int actLength = ais.read(actBuff, 0, bufferSize);
+                final int expLength = eis.read(expBuff, 0, bufferSize);
+                final int actLength = ais.read(actBuff, 0, bufferSize);
 
                 if (expLength < actLength) {
                     Assert.fail("actual file is longer");
@@ -136,7 +137,7 @@ public class LzmaAloneTest {
                     if (expBuff[i] != actBuff[i]) {
                         String formatted = "";
                         if (message != null) {
-                            formatted = message + " ";
+                            formatted = message + ' ';
                         }
                         Assert.fail(formatted + "files differ at byte " + (pos + i + 1));  // i starts at 0 so +1
                     }

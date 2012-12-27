@@ -53,7 +53,7 @@ public class LzmaBench {
             numBits -= NumBits;
             result = (Value << numBits);
             Value = RG.GetRnd();
-            result |= Value & (((int) 1 << numBits) - 1);
+            result |= Value & ((1 << numBits) - 1);
             Value >>>= numBits;
             NumBits = 32 - numBits;
             return result;
@@ -83,7 +83,7 @@ public class LzmaBench {
 
         int GetLogRandBits(int numBits) {
             final int len = RG.GetRnd(numBits);
-            return RG.GetRnd((int) len);
+            return RG.GetRnd(len);
         }
 
         int GetOffset() {
@@ -94,11 +94,11 @@ public class LzmaBench {
         }
 
         int GetLen1() {
-            return RG.GetRnd(1 + (int) RG.GetRnd(2));
+            return RG.GetRnd(1 + RG.GetRnd(2));
         }
 
         int GetLen2() {
-            return RG.GetRnd(2 + (int) RG.GetRnd(2));
+            return RG.GetRnd(2 + RG.GetRnd(2));
         }
 
         protected void Generate() {
@@ -252,7 +252,7 @@ public class LzmaBench {
     private static long GetCompressRating(int dictionarySize, long elapsedTime, long size) {
         final long t = GetLogSize(dictionarySize) - (18 << kSubBits);
         final long numCommandsForOne = 1060 + ((t * t * 10) >> (2 * kSubBits));
-        final long numCommands = (long) (size) * numCommandsForOne;
+        final long numCommands = size * numCommandsForOne;
         return MyMultDiv64(numCommands, elapsedTime);
     }
 
@@ -382,7 +382,7 @@ public class LzmaBench {
                     throw (new Exception("CRC Error"));
                 }
             }
-            final long benchSize = kBufferSize - (long) progressInfo.InSize;
+            final long benchSize = kBufferSize - progressInfo.InSize;
             PrintResults(dictionarySize, encodeTime, benchSize, false, 0);
             System.out.print("     ");
             PrintResults(dictionarySize, decodeTime, kBufferSize, true, compressedSize);

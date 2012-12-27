@@ -41,15 +41,15 @@ public class EncoderLearningTest {
         assertThat(encode(), is("00 00 00 00 00"));
         assertThat(encode(0), is("00 00 00 00 00"));
         assertThat(encode(1), is("00 7f ff fc 00"));
-        assertThat(encode(0,1,0,1,0, 1,0,1,0,1), is("00 56 fa d6 38 2c"));
-        assertThat(encode(1,1,1,1,1, 1,1,1,1,1), is("00 ff 2e 08 28 00"));
-        assertThat(encode(0,1,0,1,0, 1,0,1,0,1, 0,1,0,1,0, 1,0,1,0,1), is("00 57 0d 5d 83 4f 8e"));
-        assertThat(encode(1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1), is("00 ff fb 88 c9 99"));
+        assertThat(encode(0, 1, 0, 1, 0, 1, 0, 1, 0, 1), is("00 56 fa d6 38 2c"));
+        assertThat(encode(1, 1, 1, 1, 1, 1, 1, 1, 1, 1), is("00 ff 2e 08 28 00"));
+        assertThat(encode(0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1), is("00 57 0d 5d 83 4f 8e"));
+        assertThat(encode(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), is("00 ff fb 88 c9 99"));
     }
 
     @Test
     public void test_show_probs() throws Exception {
-        int[] bits = {0, 0, 0, 0, 1, 1, 1, 1};
+        final int[] bits = {0, 0, 0, 0, 1, 1, 1, 1};
         System.out.printf("initial:              prob = %4d = 0x%3x = %f\n", _probs[4], _probs[4], _probs[4] / 2048.0);
         for (int bit : bits) {
             _encoder.encode(_probs, 4, bit);
@@ -72,9 +72,9 @@ public class EncoderLearningTest {
         assertThat(toString(_stream), is("00 73 ff ff fc"));
     }
 
-    private String toString(ByteArrayOutputStream stream) {
+    private static String toString(ByteArrayOutputStream stream) {
         final byte[] bytes = stream.toByteArray();
-        final StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder(bytes.length * 3);
         for (byte aByte : bytes) {
             sb.append(String.format("%02x ", aByte));
         }

@@ -49,8 +49,8 @@ public class InWindow {
             final int numReadBytes = _stream.read(_bufferBase, _bufferOffset + _streamPos, size);
             if (numReadBytes == -1) {
                 _posLimit = _streamPos;
-                final int pointerToPostion = _bufferOffset + _posLimit;
-                if (pointerToPostion > _pointerToLastSafePosition) {
+                final int pointerToPosition = _bufferOffset + _posLimit;
+                if (pointerToPosition > _pointerToLastSafePosition) {
                     _posLimit = _pointerToLastSafePosition - _bufferOffset;
                 }
 

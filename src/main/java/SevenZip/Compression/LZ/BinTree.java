@@ -67,10 +67,10 @@ public class BinTree extends InWindow {
         }
     }
 
-    public boolean Create(int historySize, int keepAddBufferBefore,
+    public void Create(int historySize, int keepAddBufferBefore,
                           int matchMaxLen, int keepAddBufferAfter) {
         if (historySize > kMaxValForNormalize - 256) {
-            return false;
+            throw new RuntimeException();
         }
         _cutValue = 16 + (matchMaxLen >> 1);
 
@@ -106,7 +106,6 @@ public class BinTree extends InWindow {
         if (hs != _hashSizeSum) {
             _hash = new int[_hashSizeSum = hs];
         }
-        return true;
     }
 
     public int GetMatches(int... distances) throws IOException {
@@ -121,10 +120,8 @@ public class BinTree extends InWindow {
             }
         }
 
-        int offset = 0;
         final int matchMinPos = (_pos > _cyclicBufferSize) ? (_pos - _cyclicBufferSize) : 0;
         final int cur = _bufferOffset + _pos;
-        int maxLen = kStartMaxLen; // to avoid items for len < hashSize;
         final int hashValue;
         int hash2Value = 0;
         int hash3Value = 0;
@@ -132,14 +129,16 @@ public class BinTree extends InWindow {
         if (HASH_ARRAY) {
             int temp = CrcTable[_bufferBase[cur] & 0xFF] ^ (_bufferBase[cur + 1] & 0xFF);
             hash2Value = temp & (kHash2Size - 1);
-            temp ^= ((int) (_bufferBase[cur + 2] & 0xFF) << 8);
+            temp ^= ((_bufferBase[cur + 2] & 0xFF) << 8);
             hash3Value = temp & (kHash3Size - 1);
             hashValue = (temp ^ (CrcTable[_bufferBase[cur + 3] & 0xFF] << 5)) & _hashMask;
         } else {
-            hashValue = ((_bufferBase[cur] & 0xFF) ^ ((int) (_bufferBase[cur + 1] & 0xFF) << 8));
+            hashValue = ((_bufferBase[cur] & 0xFF) ^ ((_bufferBase[cur + 1] & 0xFF) << 8));
         }
 
         int curMatch = _hash[kFixHashSize + hashValue];
+        int maxLen = kStartMaxLen; // to avoid items for len < hashSize;
+        int offset = 0;
         if (HASH_ARRAY) {
             int curMatch2 = _hash[hash2Value];
             final int curMatch3 = _hash[kHash3Offset + hash3Value];
@@ -172,9 +171,8 @@ public class BinTree extends InWindow {
         int ptr0 = (_cyclicBufferPos << 1) + 1;
         int ptr1 = (_cyclicBufferPos << 1);
 
-        int len0;
         int len1;
-        len0 = len1 = kNumHashDirectBytes;
+        int len0 = len1 = kNumHashDirectBytes;
 
         if (kNumHashDirectBytes != 0) {
             if (curMatch > matchMinPos) {
@@ -254,12 +252,12 @@ public class BinTree extends InWindow {
                 int temp = CrcTable[_bufferBase[cur] & 0xFF] ^ (_bufferBase[cur + 1] & 0xFF);
                 final int hash2Value = temp & (kHash2Size - 1);
                 _hash[hash2Value] = _pos;
-                temp ^= ((int) (_bufferBase[cur + 2] & 0xFF) << 8);
+                temp ^= ((_bufferBase[cur + 2] & 0xFF) << 8);
                 final int hash3Value = temp & (kHash3Size - 1);
                 _hash[kHash3Offset + hash3Value] = _pos;
                 hashValue = (temp ^ (CrcTable[_bufferBase[cur + 3] & 0xFF] << 5)) & _hashMask;
             } else {
-                hashValue = ((_bufferBase[cur] & 0xFF) ^ ((int) (_bufferBase[cur + 1] & 0xFF) << 8));
+                hashValue = ((_bufferBase[cur] & 0xFF) ^ ((_bufferBase[cur + 1] & 0xFF) << 8));
             }
 
             int curMatch = _hash[kFixHashSize + hashValue];
@@ -268,9 +266,8 @@ public class BinTree extends InWindow {
             int ptr0 = (_cyclicBufferPos << 1) + 1;
             int ptr1 = (_cyclicBufferPos << 1);
 
-            int len0;
             int len1;
-            len0 = len1 = kNumHashDirectBytes;
+            int len0 = len1 = kNumHashDirectBytes;
 
             int count = _cutValue;
             while (true) {
@@ -315,7 +312,7 @@ public class BinTree extends InWindow {
         while (--num != 0);
     }
 
-    void NormalizeLinks(int[] items, int numItems, int subValue) {
+    static void NormalizeLinks(int[] items, int numItems, int subValue) {
         for (int i = 0; i < numItems; i++) {
             int value = items[i];
             if (value <= subValue) {

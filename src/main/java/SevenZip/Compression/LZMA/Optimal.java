@@ -28,7 +28,7 @@ class Optimal {
         Prev1IsChar = false;
     }
 
-    boolean IsShortRep() {
+    boolean isShortRep() {
         return (BackPrev == 0);
     }
 }

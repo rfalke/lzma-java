@@ -7,7 +7,7 @@ import SevenZip.Compression.RangeCoder.RangeBase;
 import java.io.IOException;
 
 class LiteralEncoder {
-    class Encoder2 {
+    static class Encoder2 {
         final short[] m_Encoders = new short[0x300];
 
         protected void Init() {
