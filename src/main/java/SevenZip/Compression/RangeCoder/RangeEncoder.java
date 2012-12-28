@@ -3,7 +3,7 @@ package SevenZip.Compression.RangeCoder;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class Encoder extends RangeBase {
+public class RangeEncoder extends RangeBase {
 
     private OutputStream _stream;
     private long _low;

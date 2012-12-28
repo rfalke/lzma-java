@@ -12,14 +12,14 @@ import static org.junit.Assert.assertThat;
 
 public class EncoderLearningTest {
 
-    private Encoder _encoder;
+    private RangeEncoder _encoder;
     private ByteArrayOutputStream _stream;
     private short[] _probs;
 
     @Before
     public void setUp() throws Exception {
         _stream = new ByteArrayOutputStream();
-        _encoder = new Encoder();
+        _encoder = new RangeEncoder();
         _encoder.setStream(_stream);
         _encoder.init();
         _probs = new short[Base.kNumStates];
@@ -72,7 +72,7 @@ public class EncoderLearningTest {
         assertThat(toString(_stream), is("00 73 ff ff fc"));
     }
 
-    private static String toString(ByteArrayOutputStream stream) {
+    public static String toString(ByteArrayOutputStream stream) {
         final byte[] bytes = stream.toByteArray();
         final StringBuilder sb = new StringBuilder(bytes.length * 3);
         for (byte aByte : bytes) {
@@ -83,7 +83,7 @@ public class EncoderLearningTest {
 
     private String encode(int... bits) throws IOException {
         _stream = new ByteArrayOutputStream();
-        _encoder = new Encoder();
+        _encoder = new RangeEncoder();
         _encoder.setStream(_stream);
         _encoder.init();
         _probs = new short[Base.kNumStates];
@@ -94,5 +94,4 @@ public class EncoderLearningTest {
         _encoder.flush();
         return toString(_stream);
     }
-
 }

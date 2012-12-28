@@ -1,6 +1,6 @@
 package SevenZip.Compression.LZMA;
 
-import SevenZip.Compression.RangeCoder.Encoder;
+import SevenZip.Compression.RangeCoder.RangeEncoder;
 
 import java.io.IOException;
 
@@ -29,8 +29,8 @@ class LenPriceTableEncoder extends LenEncoder {
     }
 
     @Override
-    public void Encode(Encoder rangeEncoder, int symbol, int posState) throws IOException {
-        super.Encode(rangeEncoder, symbol, posState);
+    public void encode(RangeEncoder rangeEncoder, int symbol, int posState) throws IOException {
+        super.encode(rangeEncoder, symbol, posState);
         if (--_counters[posState] == 0) {
             UpdateTable(posState);
         }

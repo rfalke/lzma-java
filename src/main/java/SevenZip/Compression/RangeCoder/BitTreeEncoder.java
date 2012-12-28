@@ -15,7 +15,7 @@ public class BitTreeEncoder {
         RangeBase.InitBitModels(probs);
     }
 
-    public void encode(Encoder rangeEncoder, int symbol) throws IOException {
+    public void encode(RangeEncoder rangeEncoder, int symbol) throws IOException {
         int m = 1;
         for (int bitIndex = NumBitLevels; bitIndex != 0; ) {
             bitIndex--;
@@ -25,7 +25,7 @@ public class BitTreeEncoder {
         }
     }
 
-    public void ReverseEncode(Encoder rangeEncoder, int symbol) throws IOException {
+    public void ReverseEncode(RangeEncoder rangeEncoder, int symbol) throws IOException {
         int m = 1;
         for (int i = 0; i < NumBitLevels; i++) {
             final int bit = symbol & 1;

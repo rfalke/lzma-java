@@ -3,14 +3,14 @@ package SevenZip.Compression.LZMA;
 import SevenZip.Compression.LZ.OutWindow;
 import SevenZip.Compression.RangeCoder.BitTreeDecoder;
 import SevenZip.Compression.RangeCoder.RangeBase;
+import SevenZip.Compression.RangeCoder.RangeDecoder;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class Decoder {
-    private static int ReverseDecode(short[] Models, int startIndex,
-                                     SevenZip.Compression.RangeCoder.Decoder rangeDecoder, int NumBitLevels) throws IOException {
+    private static int ReverseDecode(short[] Models, int startIndex, RangeDecoder rangeDecoder, int NumBitLevels) throws IOException {
         int m = 1;
         int symbol = 0;
         for (int bitIndex = 0; bitIndex < NumBitLevels; bitIndex++) {
@@ -45,7 +45,7 @@ public class Decoder {
             m_HighCoder.Init();
         }
 
-        protected int Decode(SevenZip.Compression.RangeCoder.Decoder rangeDecoder, int posState) throws IOException {
+        protected int Decode(RangeDecoder rangeDecoder, int posState) throws IOException {
             if (rangeDecoder.DecodeBit(m_Choice, 0) == 0) {
                 return m_LowCoder[posState].Decode(rangeDecoder);
             }
@@ -67,7 +67,7 @@ public class Decoder {
                 RangeBase.InitBitModels(m_Decoders);
             }
 
-            protected byte DecodeNormal(SevenZip.Compression.RangeCoder.Decoder rangeDecoder) throws IOException {
+            protected byte DecodeNormal(RangeDecoder rangeDecoder) throws IOException {
                 int symbol = 1;
                 do {
                     symbol = (symbol << 1) | rangeDecoder.DecodeBit(m_Decoders, symbol);
@@ -76,7 +76,7 @@ public class Decoder {
                 return (byte) symbol;
             }
 
-            protected byte DecodeWithMatchByte(SevenZip.Compression.RangeCoder.Decoder rangeDecoder, byte matchByte) throws IOException {
+            protected byte DecodeWithMatchByte(RangeDecoder rangeDecoder, byte matchByte) throws IOException {
                 int symbol = 1;
                 do {
                     final int matchBit = (matchByte >> 7) & 1;
@@ -127,7 +127,7 @@ public class Decoder {
     }
 
     private final OutWindow m_OutWindow = new OutWindow();
-    private final SevenZip.Compression.RangeCoder.Decoder m_RangeDecoder = new SevenZip.Compression.RangeCoder.Decoder();
+    private final RangeDecoder m_RangeDecoder = new RangeDecoder();
 
     private final short[] m_IsMatchDecoders = new short[Base.kNumStates << Base.kNumPosStatesBitsMax];
     private final short[] m_IsRepDecoders = new short[Base.kNumStates];

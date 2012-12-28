@@ -1,6 +1,6 @@
 package SevenZip.Compression.LZMA;
 
-import SevenZip.Compression.RangeCoder.Encoder;
+import SevenZip.Compression.RangeCoder.RangeEncoder;
 import SevenZip.Compression.RangeCoder.ProbPrices;
 import SevenZip.Compression.RangeCoder.RangeBase;
 
@@ -14,7 +14,7 @@ class LiteralEncoder {
             RangeBase.InitBitModels(m_Encoders);
         }
 
-        protected void Encode(Encoder rangeEncoder, byte symbol) throws IOException {
+        protected void encode(RangeEncoder rangeEncoder, byte symbol) throws IOException {
             int context = 1;
             for (int i = 7; i >= 0; i--) {
                 final int bit = ((symbol >> i) & 1);
@@ -23,7 +23,7 @@ class LiteralEncoder {
             }
         }
 
-        protected void EncodeMatched(Encoder rangeEncoder, byte matchByte, byte symbol) throws IOException {
+        protected void encodeMatched(RangeEncoder rangeEncoder, byte matchByte, byte symbol) throws IOException {
             int context = 1;
             boolean same = true;
             for (int i = 7; i >= 0; i--) {

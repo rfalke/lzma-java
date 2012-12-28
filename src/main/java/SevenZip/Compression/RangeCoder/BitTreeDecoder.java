@@ -16,7 +16,7 @@ public class BitTreeDecoder {
         RangeBase.InitBitModels(Models);
     }
 
-    public int Decode(Decoder rangeDecoder) throws IOException {
+    public int Decode(RangeDecoder rangeDecoder) throws IOException {
         int m = 1;
         for (int bitIndex = NumBitLevels; bitIndex != 0; bitIndex--) {
             m = (m << 1) + rangeDecoder.DecodeBit(Models, m);
@@ -24,7 +24,7 @@ public class BitTreeDecoder {
         return m - (1 << NumBitLevels);
     }
 
-    public int ReverseDecode(Decoder rangeDecoder) throws IOException {
+    public int ReverseDecode(RangeDecoder rangeDecoder) throws IOException {
         int m = 1;
         int symbol = 0;
         for (int bitIndex = 0; bitIndex < NumBitLevels; bitIndex++) {

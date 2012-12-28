@@ -16,7 +16,7 @@ public class BitTreeEncoderLearningTest {
         final BitTreeEncoder treeEncoder = new BitTreeEncoder(3);
         treeEncoder.Init();
         final ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        final Encoder rangeEncoder = new Encoder();
+        final RangeEncoder rangeEncoder = new RangeEncoder();
         rangeEncoder.setStream(stream);
         rangeEncoder.init();
 

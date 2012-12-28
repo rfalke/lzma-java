@@ -1,7 +1,7 @@
 package SevenZip.Compression.LZMA;
 
 import SevenZip.Compression.RangeCoder.BitTreeEncoder;
-import SevenZip.Compression.RangeCoder.Encoder;
+import SevenZip.Compression.RangeCoder.RangeEncoder;
 import SevenZip.Compression.RangeCoder.ProbPrices;
 import SevenZip.Compression.RangeCoder.RangeBase;
 
@@ -30,7 +30,7 @@ class LenEncoder {
         _highCoder.Init();
     }
 
-    protected void Encode(Encoder rangeEncoder, int symbol, int posState) throws IOException {
+    protected void encode(RangeEncoder rangeEncoder, int symbol, int posState) throws IOException {
         if (symbol < Base.kNumLowLenSymbols) {
             rangeEncoder.encode(_choice, 0, 0);
             _lowCoder[posState].encode(rangeEncoder, symbol);
