@@ -226,7 +226,7 @@ public class Decoder {
                     prevByte = decoder2.DecodeWithMatchByte(m_RangeDecoder, m_OutWindow.GetByte(rep0));
                 }
                 m_OutWindow.PutByte(prevByte);
-                state = Base.getNextStateAfterChar(state);
+                state = Base.getNextStateAfterLiteralByte(state);
                 nowPos64++;
             } else {
                 int len;
@@ -255,7 +255,7 @@ public class Decoder {
                     }
                     if (len == 0) {
                         len = m_RepLenDecoder.Decode(m_RangeDecoder, posState) + Base.kMatchMinLen;
-                        state = Base.getNextStateAfterRep(state);
+                        state = Base.getNextStateAfterLongRep(state);
                     }
                 } else {
                     rep3 = rep2;

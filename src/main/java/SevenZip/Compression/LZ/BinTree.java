@@ -108,7 +108,10 @@ public class BinTree extends InWindow {
         }
     }
 
-    public int GetMatches(int... distances) throws IOException {
+    /**
+     * @return the number of set array cells
+     */
+    public int fillMatches(int[] distances) throws IOException {
         final int lenLimit;
         if (_pos + _matchMaxLen <= _streamPos) {
             lenLimit = _matchMaxLen;

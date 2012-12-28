@@ -234,12 +234,11 @@ public class Encoder {
         }
         _literalEncoder.Create(_numLiteralPosStateBits, _numLiteralContextBits);
 
-        if (_dictionarySize == _dictionarySizePrev && _numFastBytesPrev == _numFastBytes) {
-            return;
+        if (_dictionarySize != _dictionarySizePrev || _numFastBytesPrev != _numFastBytes) {
+            _matchFinder.Create(_dictionarySize, kNumOpts, _numFastBytes, Base.kMatchMaxLen + 1);
+            _dictionarySizePrev = _dictionarySize;
+            _numFastBytesPrev = _numFastBytes;
         }
-        _matchFinder.Create(_dictionarySize, kNumOpts, _numFastBytes, Base.kMatchMaxLen + 1);
-        _dictionarySizePrev = _dictionarySize;
-        _numFastBytesPrev = _numFastBytes;
     }
 
     void SetWriteEndMarkerMode(boolean writeEndMarker) {
@@ -275,7 +274,7 @@ public class Encoder {
     }
 
     int ReadMatchDistances() throws IOException {
-        _numDistancePairs = _matchFinder.GetMatches(_matchDistances);
+        _numDistancePairs = _matchFinder.fillMatches(_matchDistances);
         int lenRes = 0;
         if (_numDistancePairs > 0) {
             lenRes = _matchDistances[_numDistancePairs - 2];
@@ -523,14 +522,14 @@ public class Encoder {
                 if (_optimum[cur].Prev2) {
                     state = _optimum[_optimum[cur].PosPrev2].State;
                     if (_optimum[cur].BackPrev2 < Base.kNumRepDistances) {
-                        state = Base.getNextStateAfterRep(state);
+                        state = Base.getNextStateAfterLongRep(state);
                     } else {
                         state = Base.getNextStateAfterMatch(state);
                     }
                 } else {
                     state = _optimum[posPrev].State;
                 }
-                state = Base.getNextStateAfterChar(state);
+                state = Base.getNextStateAfterLiteralByte(state);
             } else {
                 state = _optimum[posPrev].State;
             }
@@ -538,18 +537,18 @@ public class Encoder {
                 if (_optimum[cur].isShortRep()) {
                     state = Base.getNextStateAfterShortRep(state);
                 } else {
-                    state = Base.getNextStateAfterChar(state);
+                    state = Base.getNextStateAfterLiteralByte(state);
                 }
             } else {
                 final int pos;
                 if (_optimum[cur].Prev1IsChar && _optimum[cur].Prev2) {
                     posPrev = _optimum[cur].PosPrev2;
                     pos = _optimum[cur].BackPrev2;
-                    state = Base.getNextStateAfterRep(state);
+                    state = Base.getNextStateAfterLongRep(state);
                 } else {
                     pos = _optimum[cur].BackPrev;
                     if (pos < Base.kNumRepDistances) {
-                        state = Base.getNextStateAfterRep(state);
+                        state = Base.getNextStateAfterLongRep(state);
                     } else {
                         state = Base.getNextStateAfterMatch(state);
                     }
@@ -640,7 +639,7 @@ public class Encoder {
                 final int t = Math.min(numAvailableBytesFull - 1, _numFastBytes);
                 final int lenTest2 = _matchFinder.GetMatchLen(0, reps[0], t);
                 if (lenTest2 >= 2) {
-                    final int state2 = Base.getNextStateAfterChar(state);
+                    final int state2 = Base.getNextStateAfterLiteralByte(state);
 
                     final int posStateNext = (position + 1) & _posStateMask;
                     final int nextRepMatchPrice = curAnd1Price +
@@ -698,7 +697,7 @@ public class Encoder {
                     final int t = Math.min(numAvailableBytesFull - 1 - lenTest, _numFastBytes);
                     final int lenTest2 = _matchFinder.GetMatchLen(lenTest, reps[repIndex], t);
                     if (lenTest2 >= 2) {
-                        int state2 = Base.getNextStateAfterRep(state);
+                        int state2 = Base.getNextStateAfterLongRep(state);
 
                         int posStateNext = (position + lenTest) & _posStateMask;
                         final int curAndLenCharPrice =
@@ -708,7 +707,7 @@ public class Encoder {
                                                 _matchFinder.GetIndexByte(lenTest - 1 - 1)).GetPrice(true,
                                                 _matchFinder.GetIndexByte(lenTest - 1 - (reps[repIndex] + 1)),
                                                 _matchFinder.GetIndexByte(lenTest - 1));
-                        state2 = Base.getNextStateAfterChar(state2);
+                        state2 = Base.getNextStateAfterLiteralByte(state2);
                         posStateNext = (position + lenTest + 1) & _posStateMask;
                         final int nextMatchPrice = curAndLenCharPrice + ProbPrices.GetPrice1(_isMatch[(state2 << Base.kNumPosStatesBitsMax) + posStateNext]);
                         final int nextRepMatchPrice = nextMatchPrice + ProbPrices.GetPrice1(_isRep[state2]);
@@ -779,7 +778,7 @@ public class Encoder {
                                                 GetPrice(true,
                                                         _matchFinder.GetIndexByte(lenTest - (curBack + 1) - 1),
                                                         _matchFinder.GetIndexByte(lenTest - 1));
-                                state2 = Base.getNextStateAfterChar(state2);
+                                state2 = Base.getNextStateAfterLiteralByte(state2);
                                 posStateNext = (position + lenTest + 1) & _posStateMask;
                                 final int nextMatchPrice = curAndLenCharPrice + ProbPrices.GetPrice1(_isMatch[(state2 << Base.kNumPosStatesBitsMax) + posStateNext]);
                                 final int nextRepMatchPrice = nextMatchPrice + ProbPrices.GetPrice1(_isRep[state2]);
@@ -867,7 +866,7 @@ public class Encoder {
             ReadMatchDistances();
             final int posState = (int) (hlContext.nowPos64) & _posStateMask;
             _rangeEncoder.encode(_isMatch, (_state << Base.kNumPosStatesBitsMax) + posState, 0);
-            _state = Base.getNextStateAfterChar(_state);
+            _state = Base.getNextStateAfterLiteralByte(_state);
             final byte curByte = _matchFinder.GetIndexByte(0 - _additionalOffset);
             if (log.isLoggable(Level.FINE)) {
                 log.fine("encode the first byte " + curByte + " as literal byte");
@@ -962,7 +961,7 @@ public class Encoder {
                 log.fine("  encode a longer repetition (long rep)");
             }
             _repMatchLenEncoder.encode(_rangeEncoder, optimumPosAndLength.length - Base.kMatchMinLen, posState);
-            _state = Base.getNextStateAfterRep(_state);
+            _state = Base.getNextStateAfterLongRep(_state);
         }
         final int distance = _repDistances[pos];
         if (pos != 0) {
@@ -1018,7 +1017,7 @@ public class Encoder {
             subCoder.encodeMatched(_rangeEncoder, matchByte, curByte);
         }
         _previousByte = curByte;
-        _state = Base.getNextStateAfterChar(_state);
+        _state = Base.getNextStateAfterLiteralByte(_state);
     }
 
     void ReleaseMFStream() {

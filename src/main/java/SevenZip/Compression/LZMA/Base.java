@@ -13,7 +13,7 @@ public class Base {
         return 0;
     }
 
-    public static int getNextStateAfterChar(int index) {
+    public static int getNextStateAfterLiteralByte(int index) {
         if (index < 4) {
             return 0;
         }
@@ -27,12 +27,12 @@ public class Base {
         return (index < 7 ? 7 : 10);
     }
 
-    public static int getNextStateAfterRep(int index) {
-        return (index < 7 ? 8 : 11);
-    }
-
     public static int getNextStateAfterShortRep(int index) {
         return (index < 7 ? 9 : 11);
+    }
+
+    public static int getNextStateAfterLongRep(int index) {
+        return (index < 7 ? 8 : 11);
     }
 
     public static boolean isStateOneWhereAtLastACharWasFound(int index) {
