@@ -5,9 +5,40 @@ package SevenZip.Compression.LZ;
 import SevenZip.CRC;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class BinTree extends InWindow {
+    private static final int kHash2Size = 1 << 10;
+    private static final int kHash3Size = 1 << 16;
+    private static final int kBT2HashSize = 1 << 16;
+    private static final int kStartMaxLen = 1;
+    private static final int kHash3Offset = kHash2Size;
+    private static final int kEmptyHashValue = 0;
+    private static final int kMaxValForNormalize = (1 << 30) - 1;
+    private static final Logger log = Logger.getLogger(BinTree.class.getName());
+
+    public static class LengthAndDistance {
+        public int length;
+        public final int distance;
+
+
+        public LengthAndDistance(int length, int distance) {
+            this.length = length;
+            this.distance = distance;
+        }
+
+        @Override
+        public String toString() {
+            return "LengthAndDistance{" +
+                    "length=" + length +
+                    ", distance=" + distance +
+                    '}';
+        }
+    }
+
+
     private int _cyclicBufferPos;
     private int _cyclicBufferSize = 0;
     private int _matchMaxLen;
@@ -20,14 +51,6 @@ public class BinTree extends InWindow {
     private int _hashSizeSum = 0;
 
     private boolean HASH_ARRAY = true;
-
-    private static final int kHash2Size = 1 << 10;
-    private static final int kHash3Size = 1 << 16;
-    private static final int kBT2HashSize = 1 << 16;
-    private static final int kStartMaxLen = 1;
-    private static final int kHash3Offset = kHash2Size;
-    private static final int kEmptyHashValue = 0;
-    private static final int kMaxValForNormalize = (1 << 30) - 1;
 
     private int kNumHashDirectBytes = 0;
     private int kMinMatchCheck = 4;
@@ -53,22 +76,22 @@ public class BinTree extends InWindow {
             _hash[i] = kEmptyHashValue;
         }
         _cyclicBufferPos = 0;
-        ReduceOffsets(-1);
+        reduceOffsets(-1);
     }
 
     @Override
-    protected void MovePos() throws IOException {
+    protected void incrementPosition() throws IOException {
         if (++_cyclicBufferPos >= _cyclicBufferSize) {
             _cyclicBufferPos = 0;
         }
-        super.MovePos();
+        super.incrementPosition();
         if (_pos == kMaxValForNormalize) {
             Normalize();
         }
     }
 
     public void Create(int historySize, int keepAddBufferBefore,
-                          int matchMaxLen, int keepAddBufferAfter) {
+                       int matchMaxLen, int keepAddBufferAfter) {
         if (historySize > kMaxValForNormalize - 256) {
             throw new RuntimeException();
         }
@@ -83,7 +106,8 @@ public class BinTree extends InWindow {
 
         final int cyclicBufferSize = historySize + 1;
         if (_cyclicBufferSize != cyclicBufferSize) {
-            _son = new int[(_cyclicBufferSize = cyclicBufferSize) * 2];
+            _cyclicBufferSize = cyclicBufferSize;
+            _son = new int[_cyclicBufferSize * 2];
         }
 
         int hs = kBT2HashSize;
@@ -104,21 +128,35 @@ public class BinTree extends InWindow {
             hs += kFixHashSize;
         }
         if (hs != _hashSizeSum) {
-            _hash = new int[_hashSizeSum = hs];
+            _hashSizeSum = hs;
+            _hash = new int[_hashSizeSum];
         }
     }
 
     /**
      * @return the number of set array cells
      */
-    public int fillMatches(int[] distances) throws IOException {
+    public int fillMatches(LengthAndDistance[] lengthAndDistances) throws IOException {
+        final int oldPosition = _pos;
+        final int result = fillMatches0(lengthAndDistances);
+        if (log.isLoggable(Level.FINE)) {
+            log.fine("  found " + result + " match pairs for offset " + oldPosition + " now " + _pos);
+            for (int i = 0; i < result; i++) {
+                final LengthAndDistance lengthAndDistance = lengthAndDistances[i];
+                log.fine("    [" + i + "]: length=" + lengthAndDistance.length + " distance=" + lengthAndDistance.distance);
+            }
+        }
+        return result;
+    }
+
+    private int fillMatches0(LengthAndDistance[] distances) throws IOException {
         final int lenLimit;
         if (_pos + _matchMaxLen <= _streamPos) {
             lenLimit = _matchMaxLen;
         } else {
             lenLimit = _streamPos - _pos;
             if (lenLimit < kMinMatchCheck) {
-                MovePos();
+                incrementPosition();
                 return 0;
             }
         }
@@ -149,22 +187,22 @@ public class BinTree extends InWindow {
             _hash[kHash3Offset + hash3Value] = _pos;
             if (curMatch2 > matchMinPos) {
                 if (_bufferBase[_bufferOffset + curMatch2] == _bufferBase[cur]) {
-                    distances[offset++] = maxLen = 2;
-                    distances[offset++] = _pos - curMatch2 - 1;
+                    maxLen = 2;
+                    distances[offset++] = new LengthAndDistance(2, _pos - curMatch2 - 1);
                 }
             }
             if (curMatch3 > matchMinPos) {
                 if (_bufferBase[_bufferOffset + curMatch3] == _bufferBase[cur]) {
                     if (curMatch3 == curMatch2) {
-                        offset -= 2;
+                        offset--;
                     }
-                    distances[offset++] = maxLen = 3;
-                    distances[offset++] = _pos - curMatch3 - 1;
+                    maxLen = 3;
+                    distances[offset++] = new LengthAndDistance(3, _pos - curMatch3 - 1);
                     curMatch2 = curMatch3;
                 }
             }
             if (offset != 0 && curMatch2 == curMatch) {
-                offset -= 2;
+                offset--;
                 maxLen = kStartMaxLen;
             }
         }
@@ -174,15 +212,15 @@ public class BinTree extends InWindow {
         int ptr0 = (_cyclicBufferPos << 1) + 1;
         int ptr1 = (_cyclicBufferPos << 1);
 
-        int len1;
-        int len0 = len1 = kNumHashDirectBytes;
+        int len0 = kNumHashDirectBytes;
+        int len1 = kNumHashDirectBytes;
 
         if (kNumHashDirectBytes != 0) {
             if (curMatch > matchMinPos) {
                 if (_bufferBase[_bufferOffset + curMatch + kNumHashDirectBytes] !=
                         _bufferBase[cur + kNumHashDirectBytes]) {
-                    distances[offset++] = maxLen = kNumHashDirectBytes;
-                    distances[offset++] = _pos - curMatch - 1;
+                    maxLen = kNumHashDirectBytes;
+                    distances[offset++] = new LengthAndDistance(kNumHashDirectBytes, _pos - curMatch - 1);
                 }
             }
         }
@@ -191,7 +229,8 @@ public class BinTree extends InWindow {
 
         while (true) {
             if (curMatch <= matchMinPos || count-- == 0) {
-                _son[ptr0] = _son[ptr1] = kEmptyHashValue;
+                _son[ptr0] = kEmptyHashValue;
+                _son[ptr1] = kEmptyHashValue;
                 break;
             }
             final int delta = _pos - curMatch;
@@ -208,8 +247,8 @@ public class BinTree extends InWindow {
                     }
                 }
                 if (maxLen < len) {
-                    distances[offset++] = maxLen = len;
-                    distances[offset++] = delta - 1;
+                    maxLen = len;
+                    distances[offset++] = new LengthAndDistance(maxLen, delta - 1);
                     if (len == lenLimit) {
                         _son[ptr1] = _son[cyclicPos];
                         _son[ptr0] = _son[cyclicPos + 1];
@@ -229,7 +268,7 @@ public class BinTree extends InWindow {
                 len0 = len;
             }
         }
-        MovePos();
+        incrementPosition();
         return offset;
     }
 
@@ -241,7 +280,7 @@ public class BinTree extends InWindow {
             } else {
                 lenLimit = _streamPos - _pos;
                 if (lenLimit < kMinMatchCheck) {
-                    MovePos();
+                    incrementPosition();
                     continue;
                 }
             }
@@ -269,13 +308,14 @@ public class BinTree extends InWindow {
             int ptr0 = (_cyclicBufferPos << 1) + 1;
             int ptr1 = (_cyclicBufferPos << 1);
 
-            int len1;
-            int len0 = len1 = kNumHashDirectBytes;
+            int len0 = kNumHashDirectBytes;
+            int len1 = kNumHashDirectBytes;
 
             int count = _cutValue;
             while (true) {
                 if (curMatch <= matchMinPos || count-- == 0) {
-                    _son[ptr0] = _son[ptr1] = kEmptyHashValue;
+                    _son[ptr0] = kEmptyHashValue;
+                    _son[ptr1] = kEmptyHashValue;
                     break;
                 }
 
@@ -310,7 +350,7 @@ public class BinTree extends InWindow {
                     len0 = len;
                 }
             }
-            MovePos();
+            incrementPosition();
         }
         while (--num != 0);
     }
@@ -331,7 +371,7 @@ public class BinTree extends InWindow {
         final int subValue = _pos - _cyclicBufferSize;
         NormalizeLinks(_son, _cyclicBufferSize * 2, subValue);
         NormalizeLinks(_hash, _hashSizeSum, subValue);
-        ReduceOffsets(subValue);
+        reduceOffsets(subValue);
     }
 
     public void SetCutValue(int cutValue) {

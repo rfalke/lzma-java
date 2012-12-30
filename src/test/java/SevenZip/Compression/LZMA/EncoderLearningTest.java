@@ -18,7 +18,7 @@ public class EncoderLearningTest {
 
     @Before
     public void setUp() throws Exception {
-        Logger.getLogger(Encoder.class.getName()).setLevel(Level.FINE);
+        Logger.getLogger("").setLevel(Level.FINE);
         for (Handler handler : Logger.getLogger("").getHandlers()) {
             handler.setLevel(Level.ALL);
             handler.setFormatter(new LogFormatter());
@@ -27,7 +27,7 @@ public class EncoderLearningTest {
 
     @After
     public void resetLogger() throws Exception {
-        Logger.getLogger(Encoder.class.getName()).setLevel(Level.INFO);
+        Logger.getLogger("").setLevel(Level.INFO);
     }
 
     @Test
@@ -35,10 +35,11 @@ public class EncoderLearningTest {
         encode(new byte[]{99, 100, 98, 100, 100, 100, 100, 100, 100, 100, 100});
         encode(new byte[]{100, 101, 102, 103, 104, 105, 101, 102, 101, 102});
         encode(new byte[]{100, 101, 102, 103, 101, 104, 101, 101, 101});
+        encode(new byte[]{100, 100, 100, 101, 100, 100, 100, 101, 100, 100, 100, 101});
     }
 
     private static String encode(byte... bytes) throws IOException {
-        log.info("Encode "+ Arrays.toString(bytes));
+        log.info("############ Encode " + Arrays.toString(bytes));
         final ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         final Encoder encoder = new Encoder();

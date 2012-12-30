@@ -83,7 +83,6 @@ public class Encoder {
         }
     }
 
-
     private static int getPosSlot(int pos) {
         if (pos < (1 << 11)) {
             return g_FastPos[pos];
@@ -128,7 +127,7 @@ public class Encoder {
 
     private final LiteralEncoder _literalEncoder = new LiteralEncoder();
 
-    private final int[] _matchDistances = new int[Base.kMatchMaxLen * 2 + 2];
+    private final BinTree.LengthAndDistance[] _matchDistances = new BinTree.LengthAndDistance[Base.kMatchMaxLen + 1];
 
     private int _matchPriceCount;
     private BinTree _matchFinder;
@@ -275,16 +274,16 @@ public class Encoder {
 
     int ReadMatchDistances() throws IOException {
         _numDistancePairs = _matchFinder.fillMatches(_matchDistances);
-        int lenRes = 0;
+        int length = 0;
         if (_numDistancePairs > 0) {
-            lenRes = _matchDistances[_numDistancePairs - 2];
-            if (lenRes == _numFastBytes) {
-                lenRes += _matchFinder.GetMatchLen(lenRes - 1, _matchDistances[_numDistancePairs - 1],
-                        Base.kMatchMaxLen - lenRes);
+            final BinTree.LengthAndDistance biggestMatch = _matchDistances[_numDistancePairs - 1];
+            length = biggestMatch.length;
+            if (length == _numFastBytes) {
+                length += _matchFinder.GetMatchLen(length - 1, biggestMatch.distance, Base.kMatchMaxLen - length);
             }
         }
         _additionalOffset++;
-        return lenRes;
+        return length;
     }
 
     void MovePos(int num) throws IOException {
@@ -369,7 +368,8 @@ public class Encoder {
             _optimumCurrentIndex = _optimum[_optimumCurrentIndex].PosPrev;
             return new PosAndLength(lenPos, lenRes);
         }
-        _optimumCurrentIndex = _optimumEndIndex = 0;
+        _optimumCurrentIndex = 0;
+        _optimumEndIndex = 0;
 
         final int lenMain;
         if (_longestMatchWasFound) {
@@ -404,7 +404,7 @@ public class Encoder {
         }
 
         if (lenMain >= _numFastBytes) {
-            final int pos = _matchDistances[numDistancePairs - 1] + Base.kNumRepDistances;
+            final int pos = _matchDistances[numDistancePairs - 1].distance + Base.kNumRepDistances;
             MovePos(lenMain - 1);
             return new PosAndLength(pos, lenMain);
         }
@@ -478,11 +478,11 @@ public class Encoder {
         len = ((repLens[0] >= 2) ? repLens[0] + 1 : 2);
         if (len <= lenMain) {
             int offs = 0;
-            while (len > _matchDistances[offs]) {
-                offs += 2;
+            while (len > _matchDistances[offs].length) {
+                offs++;
             }
             for (; ; len++) {
-                final int distance = _matchDistances[offs + 1];
+                final int distance = _matchDistances[offs].distance;
                 final int curAndLenPrice = normalMatchPrice + GetPosLenPrice(distance, len, posState);
                 final Optimal optimum = _optimum[len];
                 if (curAndLenPrice < optimum.Price) {
@@ -491,8 +491,8 @@ public class Encoder {
                     optimum.BackPrev = distance + Base.kNumRepDistances;
                     optimum.Prev1IsChar = false;
                 }
-                if (len == _matchDistances[offs]) {
-                    offs += 2;
+                if (len == _matchDistances[offs].length) {
+                    offs++;
                     if (offs == numDistancePairs) {
                         break;
                     }
@@ -736,10 +736,10 @@ public class Encoder {
 
             if (newLen > numAvailableBytes) {
                 newLen = numAvailableBytes;
-                for (numDistancePairs = 0; newLen > _matchDistances[numDistancePairs]; numDistancePairs += 2) {
+                for (numDistancePairs = 0; newLen > _matchDistances[numDistancePairs].length; numDistancePairs++) {
                 }
-                _matchDistances[numDistancePairs] = newLen;
-                numDistancePairs += 2;
+                _matchDistances[numDistancePairs].length = newLen;
+                numDistancePairs++;
             }
             if (newLen >= startLen) {
                 normalMatchPrice = matchPrice + ProbPrices.GetPrice0(_isRep[state]);
@@ -748,12 +748,12 @@ public class Encoder {
                 }
 
                 int offs = 0;
-                while (startLen > _matchDistances[offs]) {
-                    offs += 2;
+                while (startLen > _matchDistances[offs].length) {
+                    offs++;
                 }
 
                 for (int lenTest = startLen; ; lenTest++) {
-                    final int curBack = _matchDistances[offs + 1];
+                    final int curBack = _matchDistances[offs].distance;
                     int curAndLenPrice = normalMatchPrice + GetPosLenPrice(curBack, lenTest, posState);
                     Optimal optimum = _optimum[cur + lenTest];
                     if (curAndLenPrice < optimum.Price) {
@@ -763,7 +763,7 @@ public class Encoder {
                         optimum.Prev1IsChar = false;
                     }
 
-                    if (lenTest == _matchDistances[offs]) {
+                    if (lenTest == _matchDistances[offs].length) {
                         if (lenTest < numAvailableBytesFull) {
                             final int t = Math.min(numAvailableBytesFull - 1 - lenTest, _numFastBytes);
                             final int lenTest2 = _matchFinder.GetMatchLen(lenTest, curBack, t);
@@ -800,7 +800,7 @@ public class Encoder {
                                 }
                             }
                         }
-                        offs += 2;
+                        offs++;
                         if (offs == numDistancePairs) {
                             break;
                         }
@@ -888,9 +888,12 @@ public class Encoder {
     }
 
     private boolean encodeOne(HlContext hlContext, long progressPosValuePrev) throws IOException {
+        if (log.isLoggable(Level.FINE)) {
+            log.fine("Encode content for offset " + hlContext.nowPos64);
+        }
         final PosAndLength optimumPosAndLength = getOptimum((int) hlContext.nowPos64);
         if (log.isLoggable(Level.FINE)) {
-            log.fine("At offset " + hlContext.nowPos64 + " got " + optimumPosAndLength);
+            log.fine("  got " + optimumPosAndLength);
         }
         final int posState = ((int) hlContext.nowPos64) & _posStateMask;
         final int complexState = (_state << Base.kNumPosStatesBitsMax) + posState;

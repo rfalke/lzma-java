@@ -16,7 +16,7 @@ public class InWindow {
     protected int _bufferOffset;
 
     private int _blockSize;  // Size of Allocated memory block
-    protected int _pos;             // offset (from _buffer) of curent byte
+    protected int _pos;             // offset (from _buffer) of current byte
     private int _keepSizeBefore;  // how many BYTEs must be kept in buffer before _pos
     private int _keepSizeAfter;   // how many BYTEs must be kept buffer after _pos
     protected int _streamPos;   // offset (from _buffer) of first not read byte from Stream
@@ -94,7 +94,7 @@ public class InWindow {
         ReadBlock();
     }
 
-    protected void MovePos() throws IOException {
+    protected void incrementPosition() throws IOException {
         _pos++;
         if (_pos > _posLimit) {
             final int pointerToPostion = _bufferOffset + _pos;
@@ -103,6 +103,13 @@ public class InWindow {
             }
             ReadBlock();
         }
+    }
+
+    protected void reduceOffsets(int subValue) {
+        _bufferOffset += subValue;
+        _posLimit -= subValue;
+        _pos -= subValue;
+        _streamPos -= subValue;
     }
 
     public byte GetIndexByte(int index) {
@@ -128,12 +135,5 @@ public class InWindow {
 
     public int GetNumAvailableBytes() {
         return _streamPos - _pos;
-    }
-
-    protected void ReduceOffsets(int subValue) {
-        _bufferOffset += subValue;
-        _posLimit -= subValue;
-        _pos -= subValue;
-        _streamPos -= subValue;
     }
 }
